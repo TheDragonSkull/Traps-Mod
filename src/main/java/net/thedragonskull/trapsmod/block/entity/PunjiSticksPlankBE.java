@@ -15,6 +15,7 @@ import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache
 import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.animation.RawAnimation;
+import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import javax.annotation.Nullable;
@@ -22,6 +23,11 @@ import javax.annotation.Nullable;
 
 public class PunjiSticksPlankBE extends BlockEntity implements GeoBlockEntity {
     private AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+
+    public static final RawAnimation ROTATE_BASE_ACTIVATE = RawAnimation.begin().thenPlay("animation.punji.base_activate");
+    public static final RawAnimation ROTATE_BASE_RESET = RawAnimation.begin().thenPlay("animation.punji.base_reset");
+    public static final RawAnimation ROTATE_EXT_ACTIVATE = RawAnimation.begin().thenPlay("animation.punji.extension_activate");
+    public static final RawAnimation ROTATE_EXT_RESET = RawAnimation.begin().thenPlay("animation.punji.extension_reset");
 
     private PlankPart lastActivatedPart = PlankPart.BASE;
 
@@ -42,18 +48,12 @@ public class PunjiSticksPlankBE extends BlockEntity implements GeoBlockEntity {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "controller", 0, state -> {
-            BlockState blockState = this.getBlockState();
-            PlankPart clickedPart = this.getLastActivatedPart();
-            boolean active = blockState.getValue(PunjiSticksPlank.ACTIVE);
-
-            String anim = switch (clickedPart) {
-                case BASE -> active ? "animation.punji.base_activate" : "animation.punji.base_reset";
-                case EXTENSION -> active ? "animation.punji.extension_activate" : "animation.punji.extension_reset";
-            };
-
-            return state.setAndContinue(RawAnimation.begin().thenPlayAndHold(anim));
-        }));
+        controllers.add(new AnimationController<>(this, "plank_controller", state -> PlayState.CONTINUE)
+                .triggerableAnim("base_activate", ROTATE_BASE_ACTIVATE)
+                .triggerableAnim("base_reset", ROTATE_BASE_RESET)
+                .triggerableAnim("extension_activate", ROTATE_EXT_ACTIVATE)
+                .triggerableAnim("extension_reset", ROTATE_EXT_RESET)
+        );
     }
 
     public void setLastActivatedPart(PlankPart part) {
