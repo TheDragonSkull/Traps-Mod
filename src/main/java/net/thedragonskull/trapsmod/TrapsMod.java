@@ -1,6 +1,7 @@
 package net.thedragonskull.trapsmod;
 
 import com.mojang.logging.LogUtils;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
@@ -12,6 +13,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.thedragonskull.trapsmod.block.ModBlocks;
+import net.thedragonskull.trapsmod.block.entity.ModBlockEntities;
+import net.thedragonskull.trapsmod.block.entity.renderer.PunjiSticksPlankRenderer;
 import net.thedragonskull.trapsmod.item.ModItems;
 import org.slf4j.Logger;
 
@@ -27,6 +30,7 @@ public class TrapsMod
 
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
+        ModBlockEntities.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
@@ -48,6 +52,10 @@ public class TrapsMod
     public static class ClientModEvents {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
+            event.enqueueWork(() -> {
+                BlockEntityRenderers.register(ModBlockEntities.PUNJI_STICKS_PLANK_BE.get(), PunjiSticksPlankRenderer::new);
+            });
+
         }
     }
 }

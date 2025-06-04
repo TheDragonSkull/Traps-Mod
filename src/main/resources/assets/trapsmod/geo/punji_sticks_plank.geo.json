@@ -1,0 +1,35 @@
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.unknown",
+				"texture_width": 32,
+				"texture_height": 32,
+				"visible_bounds_width": 4,
+				"visible_bounds_height": 3.5,
+				"visible_bounds_offset": [0, 1.25, 0]
+			},
+			"bones": [
+				{
+					"name": "plank",
+					"pivot": [0, 15, -8],
+					"cubes": [
+						{
+							"origin": [-7.75, 14, -22.75],
+							"size": [15.5, 2, 29.5],
+							"uv": {
+								"north": {"uv": [31, 1], "uv_size": [-14, 2]},
+								"east": {"uv": [31, 31], "uv_size": [-14, -2]},
+								"south": {"uv": [31, 29], "uv_size": [-14, 2]},
+								"west": {"uv": [31, 3], "uv_size": [-14, -2]},
+								"up": {"uv": [15, 31], "uv_size": [-14, -30]},
+								"down": {"uv": [31, 31], "uv_size": [-14, -30]}
+							}
+						}
+					]
+				}
+			]
+		}
+	]
+}

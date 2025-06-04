@@ -2,30 +2,68 @@ package net.thedragonskull.trapsmod.block.custom;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.phys.BlockHitResult;
 import net.thedragonskull.trapsmod.block.custom.properties.PlankPart;
+import net.thedragonskull.trapsmod.block.entity.PunjiSticksPlankBE;
 import org.jetbrains.annotations.Nullable;
 
 public class PunjiSticksPlank extends HorizontalDirectionalBlock implements EntityBlock {
 
     public static final EnumProperty<PlankPart> PLANK_PART = EnumProperty.create("plank_part", PlankPart.class);
+    public static final BooleanProperty ACTIVE = BooleanProperty.create("active");
 
     public PunjiSticksPlank(Properties pProperties) {
         super(pProperties);
         this.registerDefaultState(this.stateDefinition.any().setValue(PLANK_PART, PlankPart.BASE));
+        this.registerDefaultState(this.stateDefinition.any().setValue(ACTIVE, false));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING, PLANK_PART);
+        builder.add(FACING, PLANK_PART, ACTIVE);
+    }
+
+    @Override
+    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (level.isClientSide) return InteractionResult.SUCCESS;
+
+        Direction facing = state.getValue(FACING);
+        PlankPart part = state.getValue(PLANK_PART);
+
+        BlockPos basePos = (part == PlankPart.BASE) ? pos : pos.relative(facing.getOpposite());
+        BlockState baseState = level.getBlockState(basePos);
+
+        if (baseState.getBlock() instanceof PunjiSticksPlank &&
+                baseState.getValue(PLANK_PART) == PlankPart.BASE) {
+
+            boolean current = baseState.getValue(ACTIVE);
+            BlockState newState = baseState.setValue(ACTIVE, !current);
+            level.setBlock(basePos, newState, 3);
+
+            BlockEntity be = level.getBlockEntity(basePos);
+            if (be instanceof PunjiSticksPlankBE punji) {
+                punji.setLastActivatedPart(part);
+                punji.triggerAnim("controller", !current ? "activate" : "reset");
+            }
+
+        }
+
+        return InteractionResult.SUCCESS;
     }
 
     @Nullable
@@ -99,6 +137,6 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
 
     @Override
     public @Nullable BlockEntity newBlockEntity(BlockPos pPos, BlockState pState) {
-        return
+        return new PunjiSticksPlankBE(pPos, pState);
     }
 }

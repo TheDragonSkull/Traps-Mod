@@ -1,0 +1,74 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.punji.base_activate": {
+			"loop": "hold_on_last_frame",
+			"animation_length": 0.25,
+			"bones": {
+				"plank": {
+					"rotation": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"0.25": {
+							"vector": [-90, 0, 0],
+							"easing": "easeOutQuart"
+						}
+					}
+				}
+			}
+		},
+		"animation.punji.base_reset": {
+			"loop": "hold_on_last_frame",
+			"animation_length": 0.25,
+			"bones": {
+				"plank": {
+					"rotation": {
+						"0.0": {
+							"vector": [-90, 0, 0]
+						},
+						"0.25": {
+							"vector": [0, 0, 0],
+							"easing": "easeOutQuart"
+						}
+					}
+				}
+			}
+		},
+		"animation.punji.extension_activate": {
+			"loop": "hold_on_last_frame",
+			"animation_length": 0.25,
+			"bones": {
+				"plank": {
+					"rotation": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"0.25": {
+							"vector": [90, 0, 0],
+							"easing": "easeOutQuart"
+						}
+					}
+				}
+			}
+		},
+		"animation.punji.extension_reset": {
+			"loop": "hold_on_last_frame",
+			"animation_length": 0.25,
+			"bones": {
+				"plank": {
+					"rotation": {
+						"0.0": {
+							"vector": [90, 0, 0]
+						},
+						"0.25": {
+							"vector": [0, 0, 0],
+							"easing": "easeOutQuart"
+						}
+					}
+				}
+			}
+		}
+	},
+	"geckolib_format_version": 2
+}
