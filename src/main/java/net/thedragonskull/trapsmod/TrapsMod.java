@@ -11,6 +11,8 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.thedragonskull.trapsmod.block.ModBlocks;
+import net.thedragonskull.trapsmod.item.ModItems;
 import org.slf4j.Logger;
 
 @Mod(TrapsMod.MOD_ID)
@@ -23,7 +25,8 @@ public class TrapsMod
     {
         IEventBus modEventBus = context.getModEventBus();
 
-
+        ModItems.register(modEventBus);
+        ModBlocks.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
