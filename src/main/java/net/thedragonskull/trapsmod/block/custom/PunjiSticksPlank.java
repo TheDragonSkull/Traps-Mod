@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -25,12 +26,26 @@ import net.thedragonskull.trapsmod.block.custom.properties.PlankPart;
 import net.thedragonskull.trapsmod.block.entity.PunjiSticksPlankBE;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.EnumMap;
+import java.util.Map;
+
 public class PunjiSticksPlank extends HorizontalDirectionalBlock implements EntityBlock {
 
     public static final EnumProperty<PlankPart> PLANK_PART = EnumProperty.create("plank_part", PlankPart.class);
     public static final BooleanProperty BASE_ACTIVE = BooleanProperty.create("base_active");
     public static final BooleanProperty EXTENSION_ACTIVE = BooleanProperty.create("extension_active");
+
     private static final VoxelShape SHAPE_CLOSED = Block.box(0.0D, 14.0D, 0.0D, 16.0D, 16.0D, 16.0D);
+    private static final Map<Direction, VoxelShape> SHAPES_CLOSED = new EnumMap<>(Direction.class);
+
+    static {
+        VoxelShape original = Block.box(0.0D, 14.0D, 0.0D, 16.0D, 16.0D, 16.0D);
+
+        for (Direction dir : Direction.Plane.HORIZONTAL) {
+            SHAPES_CLOSED.put(dir, rotateY(original, dir));
+        }
+    }
+
     private static final VoxelShape COLLISION_SHAPE_OPENED = Block.box(0, 0, 14, 16, 16, 16);
     private static final VoxelShape VISUAL_SHAPE_OPENED = Block.box(0, 0, 15, 16, 16, 17);
 
@@ -150,11 +165,11 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
         boolean active = state.getValue(BASE_ACTIVE) || state.getValue(EXTENSION_ACTIVE);
 
         if (part == PlankPart.TOP) {
-            return Block.box(0, 0, 15, 16, 16, 17);
+            return VISUAL_SHAPE_OPENED;
         }
 
         if (part == PlankPart.BASE) {
-            return active ? Block.box(0, 0, 15, 16, 16, 17) : SHAPE_CLOSED;
+            return active ? VISUAL_SHAPE_OPENED : SHAPE_CLOSED;
         } else {
             BlockPos basePos = pos.relative(facing.getOpposite());
             BlockState baseState = level.getBlockState(basePos);
@@ -171,6 +186,31 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
             return SHAPE_CLOSED;
         }
     }
+
+    private static VoxelShape rotateY(VoxelShape shape, Direction toDirection) {
+        if (toDirection == Direction.SOUTH) return shape; // original ya está bien
+
+        VoxelShape rotatedShape = Shapes.empty();
+
+        for (AABB box : shape.toAabbs()) {
+            double minX = box.minX, minY = box.minY, minZ = box.minZ;
+            double maxX = box.maxX, maxY = box.maxY, maxZ = box.maxZ;
+
+            VoxelShape rotated;
+
+            switch (toDirection) {
+                case EAST -> rotated = Block.box(16 - maxZ, minY, minX, 16 - minZ, maxY, maxX);
+                case WEST -> rotated = Block.box(minZ, minY, 16 - maxX, maxZ, maxY, 16 - minX);
+                case NORTH -> rotated = Block.box(16 - maxX, minY, 16 - maxZ, 16 - minX, maxY, 16 - minZ);
+                default -> rotated = shape;
+            }
+
+            rotatedShape = Shapes.or(rotatedShape, rotated);
+        }
+
+        return rotatedShape.optimize();
+    }
+
 
     @Override
     @Nullable
