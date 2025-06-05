@@ -13,11 +13,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityTicker;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
@@ -34,8 +31,8 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
     public static final BooleanProperty BASE_ACTIVE = BooleanProperty.create("base_active");
     public static final BooleanProperty EXTENSION_ACTIVE = BooleanProperty.create("extension_active");
     private static final VoxelShape SHAPE_CLOSED = Block.box(0.0D, 14.0D, 0.0D, 16.0D, 16.0D, 16.0D);
-    private static final VoxelShape SHAPE_OPEN_Z = Block.box(0, 0, 14, 16, 16, 16);
-    private static final VoxelShape SHAPE_OPEN_X = Block.box(14, 0, 0, 16, 16, 16);
+    private static final VoxelShape COLLISION_SHAPE_OPENED = Block.box(0, 0, 14, 16, 16, 16);
+    private static final VoxelShape VISUAL_SHAPE_OPENED = Block.box(0, 0, 15, 16, 16, 17);
 
 
     public PunjiSticksPlank(Properties pProperties) {
@@ -61,7 +58,16 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
         Direction facing = state.getValue(FACING);
         PlankPart part = state.getValue(PLANK_PART);
 
-        BlockPos basePos = (part == PlankPart.BASE) ? pos : pos.relative(facing.getOpposite());
+        BlockPos basePos;
+
+        if (part == PlankPart.BASE) {
+            basePos = pos;
+        } else if (part == PlankPart.TOP) {
+            basePos = pos.below(); // TOP está arriba de BASE
+        } else {
+            basePos = pos.relative(facing.getOpposite()); // EXTENSION
+        }
+
         BlockState baseState = level.getBlockState(basePos);
 
         if (baseState.getBlock() instanceof PunjiSticksPlank &&
@@ -100,58 +106,68 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
                 punji.triggerAnim("plank_controller", anim);
                 System.out.println("Triggering animation: " + anim);
             }
+
+            if (baseState.getValue(BASE_ACTIVE) || baseState.getValue(EXTENSION_ACTIVE)) {
+                BlockPos topPos = basePos.above();
+                if (level.isEmptyBlock(topPos)) {
+                    BlockState newBlock = this.defaultBlockState()
+                            .setValue(FACING, facing)
+                            .setValue(PLANK_PART, PlankPart.TOP)
+                            .setValue(BASE_ACTIVE, false)
+                            .setValue(EXTENSION_ACTIVE, false);
+
+                    level.setBlock(topPos, newBlock, 3);
+                }
+            } else {
+                // Si no está activo, eliminar lo que esté encima
+                BlockPos topPos = basePos.above();
+                BlockState topState = level.getBlockState(topPos);
+                if (topState.getBlock() instanceof PunjiSticksPlank) {
+                    level.removeBlock(topPos, false);
+                }
+            }
         }
 
         return InteractionResult.SUCCESS;
     }
 
     @Override
-    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        Direction facing = state.getValue(FACING);
-
-        boolean isOpen = switch (state.getValue(PLANK_PART)) {
-            case BASE -> state.getValue(BASE_ACTIVE);
-            case EXTENSION -> state.getValue(EXTENSION_ACTIVE);
-        };
-
-        if (isOpen) {
-            return switch (facing.getAxis()) {
-                case X -> SHAPE_OPEN_X;
-                case Z -> SHAPE_OPEN_Z;
-                default -> SHAPE_CLOSED;
-            };
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext pContext) {
+        if (state.getValue(BASE_ACTIVE) || state.getValue(EXTENSION_ACTIVE)) {
+            return VISUAL_SHAPE_OPENED;
         }
 
-        return SHAPE_CLOSED;
+        return getShape(state, level, pos, pContext);
     }
 
-    private static VoxelShape rotateShape(VoxelShape shape, Direction direction) {
-        VoxelShape[] buffer = new VoxelShape[] { shape, Shapes.empty() };
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        Direction facing = state.getValue(FACING);
+        PlankPart part = state.getValue(PLANK_PART);
 
-        // Rotar en pasos de 90 grados
-        int times = switch (direction) {
-            case NORTH -> 0;
-            case EAST  -> 1;
-            case SOUTH -> 2;
-            case WEST  -> 3;
-            default    -> 0;
-        };
+        boolean active = state.getValue(BASE_ACTIVE) || state.getValue(EXTENSION_ACTIVE);
 
-        for (int i = 0; i < times; i++) {
-            buffer[0].forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> {
-                buffer[1] = Shapes.or(
-                        buffer[1],
-                        Shapes.box(
-                                1 - maxZ, minY, minX,
-                                1 - minZ, maxY, maxX
-                        )
-                );
-            });
-            buffer[0] = buffer[1];
-            buffer[1] = Shapes.empty();
+        if (part == PlankPart.TOP) {
+            return Block.box(0, 0, 15, 16, 16, 17);
         }
 
-        return buffer[0];
+        if (part == PlankPart.BASE) {
+            return active ? Block.box(0, 0, 15, 16, 16, 17) : SHAPE_CLOSED;
+        } else {
+            BlockPos basePos = pos.relative(facing.getOpposite());
+            BlockState baseState = level.getBlockState(basePos);
+
+            if (baseState.getBlock() instanceof PunjiSticksPlank) {
+                boolean baseActive = baseState.getValue(BASE_ACTIVE);
+                boolean extActive = baseState.getValue(EXTENSION_ACTIVE);
+
+                if (baseActive || extActive) {
+                    return Shapes.empty(); // No forma propia, animación se encargará
+                }
+            }
+
+            return SHAPE_CLOSED;
+        }
     }
 
     @Override
@@ -189,23 +205,22 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
 
             level.setBlock(extensionPos, extensionState, 3);
         }
-
-        super.setPlacedBy(level, pos, state, placer, stack);
     }
 
     @Override
-    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) { //TODO: SI QUITO EL TOP SE QUITA TODO
         if (!state.is(newState.getBlock())) {
             Direction facing = state.getValue(FACING);
             PlankPart part = state.getValue(PLANK_PART);
-            BlockPos otherPart = (part == PlankPart.BASE)
-                    ? pos.relative(facing)
-                    : pos.relative(facing.getOpposite());
 
-            if (level.getBlockState(otherPart).is(this)) {
-                level.removeBlock(otherPart, false);
+            BlockPos otherPos = (part == PlankPart.BASE) ? pos.relative(facing) : pos.relative(facing.getOpposite());
+
+            BlockState otherState = level.getBlockState(otherPos);
+            if (otherState.getBlock() instanceof PunjiSticksPlank && otherState.getValue(PLANK_PART) != part) {
+                level.removeBlock(otherPos, false);
             }
         }
+
         super.onRemove(state, level, pos, newState, isMoving);
     }
 

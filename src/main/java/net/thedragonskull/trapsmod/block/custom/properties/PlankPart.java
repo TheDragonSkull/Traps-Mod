@@ -4,7 +4,8 @@ import net.minecraft.util.StringRepresentable;
 
 public enum PlankPart implements StringRepresentable {
     BASE("base"),
-    EXTENSION("extension");
+    EXTENSION("extension"),
+    TOP("top");
 
     private final String name;
 
