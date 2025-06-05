@@ -34,6 +34,7 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
     private static final VoxelShape COLLISION_SHAPE_OPENED = Block.box(0, 0, 14, 16, 16, 16);
     private static final VoxelShape VISUAL_SHAPE_OPENED = Block.box(0, 0, 15, 16, 16, 17);
 
+    private static boolean internalRemove = false;
 
     public PunjiSticksPlank(Properties pProperties) {
         super(pProperties);
@@ -104,7 +105,6 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
             BlockEntity be = level.getBlockEntity(basePos);
             if (be instanceof PunjiSticksPlankBE punji) {
                 punji.triggerAnim("plank_controller", anim);
-                System.out.println("Triggering animation: " + anim);
             }
 
             if (baseState.getValue(BASE_ACTIVE) || baseState.getValue(EXTENSION_ACTIVE)) {
@@ -123,7 +123,9 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
                 BlockPos topPos = basePos.above();
                 BlockState topState = level.getBlockState(topPos);
                 if (topState.getBlock() instanceof PunjiSticksPlank) {
+                    internalRemove = true;
                     level.removeBlock(topPos, false);
+                    internalRemove = false;
                 }
             }
         }
@@ -208,16 +210,46 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
     }
 
     @Override
-    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) { //TODO: SI QUITO EL TOP SE QUITA TODO
-        if (!state.is(newState.getBlock())) {
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+
+        if (internalRemove) {
+            super.onRemove(state, level, pos, newState, isMoving);
+            return;
+        }
+
+        if (state.getBlock() != newState.getBlock()) {
             Direction facing = state.getValue(FACING);
             PlankPart part = state.getValue(PLANK_PART);
 
-            BlockPos otherPos = (part == PlankPart.BASE) ? pos.relative(facing) : pos.relative(facing.getOpposite());
+            BlockPos basePos = switch (part) {
+                case BASE -> pos;
+                case TOP -> pos.below();
+                case EXTENSION -> pos.relative(facing.getOpposite());
+            };
 
-            BlockState otherState = level.getBlockState(otherPos);
-            if (otherState.getBlock() instanceof PunjiSticksPlank && otherState.getValue(PLANK_PART) != part) {
-                level.removeBlock(otherPos, false);
+            // Eliminar BASE si no estamos ya en BASE
+            if (part != PlankPart.BASE) {
+                BlockState baseState = level.getBlockState(basePos);
+                if (baseState.getBlock() instanceof PunjiSticksPlank &&
+                        baseState.getValue(PLANK_PART) == PlankPart.BASE) {
+                    level.removeBlock(basePos, false);
+                }
+            }
+
+            // Eliminar EXTENSION lateral (si existe)
+            BlockPos extPos = basePos.relative(facing);
+            BlockState extState = level.getBlockState(extPos);
+            if (extState.getBlock() instanceof PunjiSticksPlank &&
+                    extState.getValue(PLANK_PART) == PlankPart.EXTENSION) {
+                level.removeBlock(extPos, false);
+            }
+
+            // Eliminar TOP (si existe)
+            BlockPos topPos = basePos.above();
+            BlockState topState = level.getBlockState(topPos);
+            if (topState.getBlock() instanceof PunjiSticksPlank &&
+                    topState.getValue(PLANK_PART) == PlankPart.TOP) {
+                level.removeBlock(topPos, false);
             }
         }
 
