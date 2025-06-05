@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.thedragonskull.trapsmod.block.custom.properties.PlankPart;
 import net.thedragonskull.trapsmod.block.entity.PunjiSticksPlankBE;
@@ -32,7 +33,10 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
     public static final EnumProperty<PlankPart> PLANK_PART = EnumProperty.create("plank_part", PlankPart.class);
     public static final BooleanProperty BASE_ACTIVE = BooleanProperty.create("base_active");
     public static final BooleanProperty EXTENSION_ACTIVE = BooleanProperty.create("extension_active");
-    protected static final VoxelShape SHAPE = Block.box(0.0D, 14.0D, 0.0D, 16.0D, 16.0D, 16.0D);
+    private static final VoxelShape SHAPE_CLOSED = Block.box(0.0D, 14.0D, 0.0D, 16.0D, 16.0D, 16.0D);
+    private static final VoxelShape SHAPE_OPEN_Z = Block.box(0, 0, 14, 16, 16, 16);
+    private static final VoxelShape SHAPE_OPEN_X = Block.box(14, 0, 0, 16, 16, 16);
+
 
     public PunjiSticksPlank(Properties pProperties) {
         super(pProperties);
@@ -101,10 +105,53 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
         return InteractionResult.SUCCESS;
     }
 
-
     @Override
-    public VoxelShape getShape(BlockState pState, BlockGetter pLevel, BlockPos pPos, CollisionContext pContext) {
-        return SHAPE;
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        Direction facing = state.getValue(FACING);
+
+        boolean isOpen = switch (state.getValue(PLANK_PART)) {
+            case BASE -> state.getValue(BASE_ACTIVE);
+            case EXTENSION -> state.getValue(EXTENSION_ACTIVE);
+        };
+
+        if (isOpen) {
+            return switch (facing.getAxis()) {
+                case X -> SHAPE_OPEN_X;
+                case Z -> SHAPE_OPEN_Z;
+                default -> SHAPE_CLOSED;
+            };
+        }
+
+        return SHAPE_CLOSED;
+    }
+
+    private static VoxelShape rotateShape(VoxelShape shape, Direction direction) {
+        VoxelShape[] buffer = new VoxelShape[] { shape, Shapes.empty() };
+
+        // Rotar en pasos de 90 grados
+        int times = switch (direction) {
+            case NORTH -> 0;
+            case EAST  -> 1;
+            case SOUTH -> 2;
+            case WEST  -> 3;
+            default    -> 0;
+        };
+
+        for (int i = 0; i < times; i++) {
+            buffer[0].forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> {
+                buffer[1] = Shapes.or(
+                        buffer[1],
+                        Shapes.box(
+                                1 - maxZ, minY, minX,
+                                1 - minZ, maxY, maxX
+                        )
+                );
+            });
+            buffer[0] = buffer[1];
+            buffer[1] = Shapes.empty();
+        }
+
+        return buffer[0];
     }
 
     @Override
@@ -117,9 +164,8 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
 
         BlockState secondState = level.getBlockState(secondPos);
 
-        // Asegurarse de que el segundo bloque es reemplazable
         if (!secondState.canBeReplaced(context)) {
-            return null; // No se puede colocar la trampa aquí
+            return null;
         }
 
         return this.defaultBlockState()

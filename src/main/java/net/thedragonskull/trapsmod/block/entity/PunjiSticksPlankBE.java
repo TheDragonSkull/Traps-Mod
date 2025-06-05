@@ -1,14 +1,15 @@
 package net.thedragonskull.trapsmod.block.entity;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.thedragonskull.trapsmod.block.custom.PunjiSticksPlank;
-import net.thedragonskull.trapsmod.block.custom.properties.PlankPart;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
@@ -29,10 +30,17 @@ public class PunjiSticksPlankBE extends BlockEntity implements GeoBlockEntity {
     public static final RawAnimation ROTATE_EXT_ACTIVATE = RawAnimation.begin().thenPlay("animation.punji.extension_activate");
     public static final RawAnimation ROTATE_EXT_RESET = RawAnimation.begin().thenPlay("animation.punji.extension_reset");
 
-    private PlankPart lastActivatedPart = PlankPart.BASE;
-
     public PunjiSticksPlankBE(BlockPos pPos, BlockState pBlockState) {
         super(ModBlockEntities.PUNJI_STICKS_PLANK_BE.get(), pPos, pBlockState);
+    }
+
+    @Override
+    public AABB getRenderBoundingBox() {
+        Direction facing = this.getBlockState().getValue(PunjiSticksPlank.FACING);
+        BlockPos pos = this.getBlockPos();
+        BlockPos other = pos.relative(facing);
+
+        return new AABB(pos).minmax(new AABB(other));
     }
 
     @Nullable
@@ -56,13 +64,6 @@ public class PunjiSticksPlankBE extends BlockEntity implements GeoBlockEntity {
         );
     }
 
-    public void setLastActivatedPart(PlankPart part) {
-        this.lastActivatedPart = part;
-    }
-
-    public PlankPart getLastActivatedPart() {
-        return lastActivatedPart;
-    }
 
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
