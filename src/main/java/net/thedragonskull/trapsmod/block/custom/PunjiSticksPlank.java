@@ -2,6 +2,9 @@ package net.thedragonskull.trapsmod.block.custom;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -107,6 +110,10 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
         BlockEntity be = level.getBlockEntity(basePos);
         if (be instanceof PunjiSticksPlankBE punji) {
             punji.setAndTrigger(anim);
+
+            RandomSource randomsource = level.getRandom();
+            level.playSound(null, pos, SoundEvents.BARREL_CLOSE, SoundSource.BLOCKS, 1.0F,
+                    (randomsource.nextFloat() - randomsource.nextFloat()) * 0.2F + 1.0F);
         }
 
         // Limpiar bloques reemplazables encima
@@ -191,6 +198,10 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
             BlockEntity be = level.getBlockEntity(basePos);
             if (be instanceof PunjiSticksPlankBE punji) {
                 punji.setAndTrigger(anim);
+
+                RandomSource randomsource = level.getRandom();
+                level.playSound(null, pos, SoundEvents.BARREL_CLOSE, SoundSource.BLOCKS, 1.0F,
+                        (randomsource.nextFloat() - randomsource.nextFloat()) * 0.2F + 1.0F);
             }
 
             if (baseState.getValue(BASE_ACTIVE) || baseState.getValue(EXTENSION_ACTIVE)) {
