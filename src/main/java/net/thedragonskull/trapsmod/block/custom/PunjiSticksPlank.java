@@ -364,25 +364,52 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
                 }
             }
 
-            // Eliminar EXTENSION lateral (si existe)
+            // Eliminar EXTENSION (posición correcta)
             BlockPos extPos = basePos.relative(facing);
             BlockState extState = level.getBlockState(extPos);
             if (extState.getBlock() instanceof PunjiSticksPlank &&
                     extState.getValue(PLANK_PART) == PlankPart.EXTENSION) {
-                level.removeBlock(extPos, false);
+                level.removeBlock(extPos, false); // ❌ NO loot para EXTENSION
             }
 
-            // Eliminar TOP (si existe)
+            // Eliminar TOP (posición correcta)
             BlockPos topPos = basePos.above();
             BlockState topState = level.getBlockState(topPos);
             if (topState.getBlock() instanceof PunjiSticksPlank &&
                     topState.getValue(PLANK_PART) == PlankPart.TOP) {
-                level.removeBlock(topPos, false);
+                level.removeBlock(topPos, false); // ❌ NO loot para TOP
             }
+
+            if (!level.isClientSide) {
+                popResource(level, pos, new ItemStack(this.asItem())); //TODO: duplicado
+            }
+
         }
 
         super.onRemove(state, level, pos, newState, isMoving);
     }
+
+    @Override
+    public void playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
+        if (!level.isClientSide && player.isCreative()) {
+            Direction facing = state.getValue(FACING);
+            PlankPart part = state.getValue(PLANK_PART);
+
+            BlockPos basePos = switch (part) {
+                case BASE -> pos;
+                case TOP -> pos.below();
+                case EXTENSION -> pos.relative(facing.getOpposite());
+            };
+
+            // Evitar drop en creativo
+            internalRemove = true;
+            level.setBlock(basePos, Blocks.AIR.defaultBlockState(), 35);
+            internalRemove = false;
+        }
+
+        super.playerWillDestroy(level, pos, state, player);
+    }
+
 
     @Override
     public RenderShape getRenderShape(BlockState pState) {

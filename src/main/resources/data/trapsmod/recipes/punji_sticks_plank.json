@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "###",
+    "XXX"
+  ],
+  "key": {
+    "#": {
+      "item": "minecraft:coarse_dirt"
+    },
+    "X":{
+      "item": "minecraft:bamboo_planks"
+    }
+  },
+  "result": {
+    "item": "trapsmod:punji_sticks_plank",
+    "count": 1
+  },
+  "show_notification": true
+}
