@@ -62,15 +62,11 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
         Direction facing = state.getValue(FACING);
         PlankPart part = state.getValue(PLANK_PART);
 
-        BlockPos basePos;
-
-        if (part == PlankPart.BASE) {
-            basePos = pos;
-        } else if (part == PlankPart.TOP) {
-            basePos = pos.below(); // TOP está arriba de BASE
-        } else {
-            basePos = pos.relative(facing.getOpposite()); // EXTENSION
-        }
+        BlockPos basePos = switch (part) {
+            case BASE -> pos;
+            case TOP -> pos.below();
+            case EXTENSION -> pos.relative(facing.getOpposite());
+        };
 
         BlockState baseState = level.getBlockState(basePos);
 
@@ -79,6 +75,21 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
 
             boolean isBaseActive = baseState.getValue(PunjiSticksPlank.BASE_ACTIVE);
             boolean isExtActive = baseState.getValue(PunjiSticksPlank.EXTENSION_ACTIVE);
+
+            if (!isBaseActive && !isExtActive) {
+                BlockPos aboveBase = basePos.above();
+                BlockPos aboveExt = basePos.relative(facing).above();
+
+                BlockState stateAboveBase = level.getBlockState(aboveBase);
+                BlockState stateAboveExt = level.getBlockState(aboveExt);
+
+                boolean baseBlocked = !stateAboveBase.canBeReplaced();
+                boolean extBlocked = !stateAboveExt.canBeReplaced();
+
+                if (baseBlocked || extBlocked) {
+                    return InteractionResult.FAIL;
+                }
+            }
 
             String anim;
 
@@ -107,11 +118,25 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
 
             BlockEntity be = level.getBlockEntity(basePos);
             if (be instanceof PunjiSticksPlankBE punji) {
-                punji.triggerAnim("plank_controller", anim);
+                punji.setAndTrigger(anim);
             }
 
             if (baseState.getValue(BASE_ACTIVE) || baseState.getValue(EXTENSION_ACTIVE)) {
                 BlockPos topPos = basePos.above();
+
+                BlockPos aboveBase = basePos.above();
+                BlockPos aboveExt = basePos.relative(facing).above();
+
+                BlockState aboveBaseState = level.getBlockState(aboveBase);
+                BlockState aboveExtState = level.getBlockState(aboveExt);
+
+                if (aboveBaseState.canBeReplaced()) {
+                    level.destroyBlock(aboveBase, false);
+                }
+                if (aboveExtState.canBeReplaced()) {
+                    level.destroyBlock(aboveExt, false);
+                }
+
                 if (level.isEmptyBlock(topPos)) {
                     BlockState newBlock = this.defaultBlockState()
                             .setValue(FACING, facing)

@@ -29,6 +29,7 @@ public class PunjiSticksPlankBE extends BlockEntity implements GeoBlockEntity {
     public static final RawAnimation ROTATE_BASE_RESET = RawAnimation.begin().thenPlayAndHold("animation.punji.base_reset");
     public static final RawAnimation ROTATE_EXT_ACTIVATE = RawAnimation.begin().thenPlayAndHold("animation.punji.extension_activate");
     public static final RawAnimation ROTATE_EXT_RESET = RawAnimation.begin().thenPlayAndHold("animation.punji.extension_reset");
+    private String lastAnimation = null;
 
     public PunjiSticksPlankBE(BlockPos pPos, BlockState pBlockState) {
         super(ModBlockEntities.PUNJI_STICKS_PLANK_BE.get(), pPos, pBlockState);
@@ -43,6 +44,58 @@ public class PunjiSticksPlankBE extends BlockEntity implements GeoBlockEntity {
         return new AABB(pos).minmax(new AABB(other));
     }
 
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "plank_controller", state -> {
+            if (lastAnimation != null) {
+                RawAnimation anim = switch (lastAnimation) {
+                    case "base_activate" -> ROTATE_BASE_ACTIVATE;
+                    case "base_reset" -> ROTATE_BASE_RESET;
+                    case "extension_activate" -> ROTATE_EXT_ACTIVATE;
+                    case "extension_reset" -> ROTATE_EXT_RESET;
+                    default -> null;
+                };
+
+                if (anim != null) {
+                    state.setAnimation(anim);
+                    return PlayState.CONTINUE;
+                }
+            }
+
+            return PlayState.STOP;
+        }).triggerableAnim("base_activate", ROTATE_BASE_ACTIVATE)
+                .triggerableAnim("base_reset", ROTATE_BASE_RESET)
+                .triggerableAnim("extension_activate", ROTATE_EXT_ACTIVATE)
+                .triggerableAnim("extension_reset", ROTATE_EXT_RESET));
+    }
+
+
+    public void setAndTrigger(String animName) {
+        this.lastAnimation = animName;
+        triggerAnim("plank_controller", animName);
+
+        if (this.level != null && !this.level.isClientSide) {
+            setChanged();
+            this.level.sendBlockUpdated(this.worldPosition, getBlockState(), getBlockState(), 3);
+        }
+    }
+
+    @Override
+    public void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
+        if (lastAnimation != null) {
+            tag.putString("last_animation", lastAnimation);
+        }
+    }
+
+    @Override
+    public void load(CompoundTag tag) {
+        super.load(tag);
+        if (tag.contains("last_animation")) {
+            lastAnimation = tag.getString("last_animation");
+        }
+    }
+
     @Nullable
     @Override
     public Packet<ClientGamePacketListener> getUpdatePacket() {
@@ -52,16 +105,6 @@ public class PunjiSticksPlankBE extends BlockEntity implements GeoBlockEntity {
     @Override
     public @NotNull CompoundTag getUpdateTag() {
         return saveWithoutMetadata();
-    }
-
-    @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "plank_controller", state -> PlayState.CONTINUE)
-                .triggerableAnim("base_activate", ROTATE_BASE_ACTIVATE)
-                .triggerableAnim("base_reset", ROTATE_BASE_RESET)
-                .triggerableAnim("extension_activate", ROTATE_EXT_ACTIVATE)
-                .triggerableAnim("extension_reset", ROTATE_EXT_RESET)
-        );
     }
 
 
