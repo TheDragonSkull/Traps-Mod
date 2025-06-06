@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -28,6 +29,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumMap;
 import java.util.Map;
+
+import static net.thedragonskull.trapsmod.util.PunjiStickPlankUtils.isNonBlocking;
+import static net.thedragonskull.trapsmod.util.PunjiStickPlankUtils.shouldDestroyAndDrop;
 
 public class PunjiSticksPlank extends HorizontalDirectionalBlock implements EntityBlock {
 
@@ -54,6 +58,76 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING, PLANK_PART, BASE_ACTIVE, EXTENSION_ACTIVE);
     }
+
+    @Override
+    public void stepOn(Level level, BlockPos pos, BlockState state, net.minecraft.world.entity.Entity entity) {
+        if (level.isClientSide) return;
+
+        Direction facing = state.getValue(FACING);
+        PlankPart part = state.getValue(PLANK_PART);
+
+        BlockPos basePos = switch (part) {
+            case BASE -> pos;
+            case EXTENSION -> pos.relative(facing.getOpposite());
+            default -> null; // TOP no activa nada
+        };
+
+        if (basePos == null) return;
+
+        BlockState baseState = level.getBlockState(basePos);
+        if (!(baseState.getBlock() instanceof PunjiSticksPlank) || baseState.getValue(PLANK_PART) != PlankPart.BASE) return;
+
+        boolean isBaseActive = baseState.getValue(BASE_ACTIVE);
+        boolean isExtActive = baseState.getValue(EXTENSION_ACTIVE);
+
+        // Ya está activa, no hacer nada
+        if (isBaseActive || isExtActive) return;
+
+        // Chequeo de bloque encima (como en use)
+        BlockPos aboveBase = basePos.above();
+        BlockPos aboveExt = basePos.relative(facing).above();
+
+        BlockState stateAboveBase = level.getBlockState(aboveBase);
+        BlockState stateAboveExt = level.getBlockState(aboveExt);
+
+        if (!isNonBlocking(stateAboveBase, level, aboveBase) || !isNonBlocking(stateAboveExt, level, aboveExt)) return;
+
+        // Activar según desde qué parte pisaron
+        String anim;
+        if (part == PlankPart.BASE) {
+            baseState = baseState.setValue(BASE_ACTIVE, true);
+            anim = "base_activate";
+        } else {
+            baseState = baseState.setValue(EXTENSION_ACTIVE, true);
+            anim = "extension_activate";
+        }
+
+        level.setBlock(basePos, baseState, 3);
+
+        BlockEntity be = level.getBlockEntity(basePos);
+        if (be instanceof PunjiSticksPlankBE punji) {
+            punji.setAndTrigger(anim);
+        }
+
+        // Limpiar bloques reemplazables encima
+        if (shouldDestroyAndDrop(stateAboveBase, level, aboveBase)) {
+            level.destroyBlock(aboveBase, true);
+        }
+        if (shouldDestroyAndDrop(stateAboveExt, level, aboveExt)) {
+            level.destroyBlock(aboveExt, true);
+        }
+
+        // Colocar el TOP si libre
+        if (level.isEmptyBlock(aboveBase)) {
+            BlockState topBlock = this.defaultBlockState()
+                    .setValue(FACING, facing)
+                    .setValue(PLANK_PART, PlankPart.TOP)
+                    .setValue(BASE_ACTIVE, false)
+                    .setValue(EXTENSION_ACTIVE, false);
+            level.setBlock(aboveBase, topBlock, 3);
+        }
+    }
+
 
     @Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
@@ -83,12 +157,10 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
                 BlockState stateAboveBase = level.getBlockState(aboveBase);
                 BlockState stateAboveExt = level.getBlockState(aboveExt);
 
-                boolean baseBlocked = !stateAboveBase.canBeReplaced();
-                boolean extBlocked = !stateAboveExt.canBeReplaced();
+                boolean baseBlocked = !isNonBlocking(stateAboveBase, level, aboveBase);
+                boolean extBlocked = !isNonBlocking(stateAboveExt, level, aboveExt);
 
-                if (baseBlocked || extBlocked) {
-                    return InteractionResult.FAIL;
-                }
+                if (baseBlocked || extBlocked) return InteractionResult.FAIL;
             }
 
             String anim;
@@ -130,12 +202,13 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
                 BlockState aboveBaseState = level.getBlockState(aboveBase);
                 BlockState aboveExtState = level.getBlockState(aboveExt);
 
-                if (aboveBaseState.canBeReplaced()) {
-                    level.destroyBlock(aboveBase, false);
+                if (shouldDestroyAndDrop(aboveBaseState, level, aboveBase)) {
+                    level.destroyBlock(aboveBase, true);
                 }
-                if (aboveExtState.canBeReplaced()) {
-                    level.destroyBlock(aboveExt, false);
+                if (shouldDestroyAndDrop(aboveExtState, level, aboveExt)) {
+                    level.destroyBlock(aboveExt, true);
                 }
+
 
                 if (level.isEmptyBlock(topPos)) {
                     BlockState newBlock = this.defaultBlockState()

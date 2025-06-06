@@ -38,10 +38,11 @@ public class PunjiSticksPlankBE extends BlockEntity implements GeoBlockEntity {
     @Override
     public AABB getRenderBoundingBox() {
         Direction facing = this.getBlockState().getValue(PunjiSticksPlank.FACING);
-        BlockPos pos = this.getBlockPos();
-        BlockPos other = pos.relative(facing);
+        BlockPos basePos = this.getBlockPos();
+        BlockPos extPos = basePos.relative(facing);
+        BlockPos topPos = basePos.above();
 
-        return new AABB(pos).minmax(new AABB(other));
+        return new AABB(basePos).minmax(new AABB(extPos)).minmax(new AABB(topPos));
     }
 
     @Override
