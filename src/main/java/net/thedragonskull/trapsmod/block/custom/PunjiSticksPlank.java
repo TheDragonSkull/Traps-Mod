@@ -35,19 +35,7 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
     public static final BooleanProperty BASE_ACTIVE = BooleanProperty.create("base_active");
     public static final BooleanProperty EXTENSION_ACTIVE = BooleanProperty.create("extension_active");
 
-    private static final VoxelShape SHAPE_CLOSED = Block.box(0.0D, 14.0D, 0.0D, 16.0D, 16.0D, 16.0D);
-    private static final Map<Direction, VoxelShape> SHAPES_CLOSED = new EnumMap<>(Direction.class);
-
-    static {
-        VoxelShape original = Block.box(0.0D, 14.0D, 0.0D, 16.0D, 16.0D, 16.0D);
-
-        for (Direction dir : Direction.Plane.HORIZONTAL) {
-            SHAPES_CLOSED.put(dir, rotateY(original, dir));
-        }
-    }
-
-    private static final VoxelShape COLLISION_SHAPE_OPENED = Block.box(0, 0, 14, 16, 16, 16);
-    private static final VoxelShape VISUAL_SHAPE_OPENED = Block.box(0, 0, 15, 16, 16, 17);
+    private static final VoxelShape SHAPE_CLOSED = Block.box(0.0D, 14.0D, 0.0D, 16.0D, 16.0D, 16.0D); // SOUTH
 
     private static boolean internalRemove = false;
 
@@ -151,7 +139,15 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
     @Override
     public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext pContext) {
         if (state.getValue(BASE_ACTIVE) || state.getValue(EXTENSION_ACTIVE)) {
-            return VISUAL_SHAPE_OPENED;
+            Direction facing = state.getValue(FACING);
+
+            return switch (facing) {
+                case SOUTH -> Block.box(0, 0, 15, 16, 16, 17); // ✔️ original
+                case NORTH -> Block.box(0, 0, -1, 16, 16, 1);
+                case EAST  -> Block.box(15, 0, 0, 17, 16, 16);
+                case WEST  -> Block.box(-1, 0, 0, 1, 16, 16);
+                default    -> Shapes.empty(); // no debería pasar
+            };
         }
 
         return getShape(state, level, pos, pContext);
@@ -164,53 +160,36 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
 
         boolean active = state.getValue(BASE_ACTIVE) || state.getValue(EXTENSION_ACTIVE);
 
-        if (part == PlankPart.TOP) {
-            return VISUAL_SHAPE_OPENED;
+        if (part == PlankPart.TOP || (part == PlankPart.BASE && active)) {
+            // TOP y BASE (cuando está activa) comparten shape manual según FACING
+            return switch (facing) {
+                case SOUTH -> Block.box(0, 0, 15, 16, 16, 17); // ✔️ original
+                case NORTH -> Block.box(0, 0, -1, 16, 16, 1);
+                case EAST  -> Block.box(15, 0, 0, 17, 16, 16);
+                case WEST  -> Block.box(-1, 0, 0, 1, 16, 16);
+                default    -> Shapes.empty(); // no debería pasar
+            };
         }
 
         if (part == PlankPart.BASE) {
-            return active ? VISUAL_SHAPE_OPENED : SHAPE_CLOSED;
-        } else {
-            BlockPos basePos = pos.relative(facing.getOpposite());
-            BlockState baseState = level.getBlockState(basePos);
-
-            if (baseState.getBlock() instanceof PunjiSticksPlank) {
-                boolean baseActive = baseState.getValue(BASE_ACTIVE);
-                boolean extActive = baseState.getValue(EXTENSION_ACTIVE);
-
-                if (baseActive || extActive) {
-                    return Shapes.empty(); // No forma propia, animación se encargará
-                }
-            }
-
-            return SHAPE_CLOSED;
-        }
-    }
-
-    private static VoxelShape rotateY(VoxelShape shape, Direction toDirection) {
-        if (toDirection == Direction.SOUTH) return shape; // original ya está bien
-
-        VoxelShape rotatedShape = Shapes.empty();
-
-        for (AABB box : shape.toAabbs()) {
-            double minX = box.minX, minY = box.minY, minZ = box.minZ;
-            double maxX = box.maxX, maxY = box.maxY, maxZ = box.maxZ;
-
-            VoxelShape rotated;
-
-            switch (toDirection) {
-                case EAST -> rotated = Block.box(16 - maxZ, minY, minX, 16 - minZ, maxY, maxX);
-                case WEST -> rotated = Block.box(minZ, minY, 16 - maxX, maxZ, maxY, 16 - minX);
-                case NORTH -> rotated = Block.box(16 - maxX, minY, 16 - maxZ, 16 - minX, maxY, 16 - minZ);
-                default -> rotated = shape;
-            }
-
-            rotatedShape = Shapes.or(rotatedShape, rotated);
+            return SHAPE_CLOSED; // Ya rotada según FACING
         }
 
-        return rotatedShape.optimize();
-    }
+        // EXTENSION
+        BlockPos basePos = pos.relative(facing.getOpposite());
+        BlockState baseState = level.getBlockState(basePos);
 
+        if (baseState.getBlock() instanceof PunjiSticksPlank) {
+            boolean baseActive = baseState.getValue(BASE_ACTIVE);
+            boolean extActive = baseState.getValue(EXTENSION_ACTIVE);
+
+            if (baseActive || extActive) {
+                return Shapes.empty();
+            }
+        }
+
+        return SHAPE_CLOSED;
+    }
 
     @Override
     @Nullable

@@ -25,10 +25,10 @@ import javax.annotation.Nullable;
 public class PunjiSticksPlankBE extends BlockEntity implements GeoBlockEntity {
     private AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
-    public static final RawAnimation ROTATE_BASE_ACTIVATE = RawAnimation.begin().thenPlay("animation.punji.base_activate");
-    public static final RawAnimation ROTATE_BASE_RESET = RawAnimation.begin().thenPlay("animation.punji.base_reset");
-    public static final RawAnimation ROTATE_EXT_ACTIVATE = RawAnimation.begin().thenPlay("animation.punji.extension_activate");
-    public static final RawAnimation ROTATE_EXT_RESET = RawAnimation.begin().thenPlay("animation.punji.extension_reset");
+    public static final RawAnimation ROTATE_BASE_ACTIVATE = RawAnimation.begin().thenPlayAndHold("animation.punji.base_activate");
+    public static final RawAnimation ROTATE_BASE_RESET = RawAnimation.begin().thenPlayAndHold("animation.punji.base_reset");
+    public static final RawAnimation ROTATE_EXT_ACTIVATE = RawAnimation.begin().thenPlayAndHold("animation.punji.extension_activate");
+    public static final RawAnimation ROTATE_EXT_RESET = RawAnimation.begin().thenPlayAndHold("animation.punji.extension_reset");
 
     public PunjiSticksPlankBE(BlockPos pPos, BlockState pBlockState) {
         super(ModBlockEntities.PUNJI_STICKS_PLANK_BE.get(), pPos, pBlockState);
