@@ -220,7 +220,6 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
                     level.destroyBlock(aboveExt, true);
                 }
 
-
                 if (level.isEmptyBlock(topPos)) {
                     BlockState newBlock = this.defaultBlockState()
                             .setValue(FACING, facing)
@@ -228,6 +227,7 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
                             .setValue(BASE_ACTIVE, false)
                             .setValue(EXTENSION_ACTIVE, false);
 
+                    // Colocar el TOP si libre
                     level.setBlock(topPos, newBlock, 3);
                 }
             } else {
@@ -340,10 +340,10 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
 
-        if (internalRemove) {
-            super.onRemove(state, level, pos, newState, isMoving);
+/*        if (internalRemove) {
+            super.onRemove(state, level, pos, newState, isMoving); TODO: si añado esto el top no se elimina y si lo quito, dropea en creativo
             return;
-        }
+        }*/
 
         if (state.getBlock() != newState.getBlock()) {
             Direction facing = state.getValue(FACING);
@@ -360,8 +360,18 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
                 BlockState baseState = level.getBlockState(basePos);
                 if (baseState.getBlock() instanceof PunjiSticksPlank &&
                         baseState.getValue(PLANK_PART) == PlankPart.BASE) {
+                    internalRemove = true;
                     level.removeBlock(basePos, false);
+                    internalRemove = false;
+
+                    if (!level.isClientSide) {
+                        popResource(level, basePos, new ItemStack(this.asItem()));
+                    }
                 }
+            }
+
+            if (!level.isClientSide && part == PlankPart.BASE) {
+                popResource(level, pos, new ItemStack(this.asItem()));
             }
 
             // Eliminar EXTENSION (posición correcta)
@@ -369,7 +379,9 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
             BlockState extState = level.getBlockState(extPos);
             if (extState.getBlock() instanceof PunjiSticksPlank &&
                     extState.getValue(PLANK_PART) == PlankPart.EXTENSION) {
-                level.removeBlock(extPos, false); // ❌ NO loot para EXTENSION
+                internalRemove = true;
+                level.removeBlock(extPos, false);
+                internalRemove = false;
             }
 
             // Eliminar TOP (posición correcta)
@@ -377,11 +389,9 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
             BlockState topState = level.getBlockState(topPos);
             if (topState.getBlock() instanceof PunjiSticksPlank &&
                     topState.getValue(PLANK_PART) == PlankPart.TOP) {
-                level.removeBlock(topPos, false); // ❌ NO loot para TOP
-            }
-
-            if (!level.isClientSide) {
-                popResource(level, pos, new ItemStack(this.asItem())); //TODO: duplicado
+                internalRemove = true;
+                level.removeBlock(topPos, false);
+                internalRemove = false;
             }
 
         }
