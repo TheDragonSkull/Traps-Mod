@@ -2,6 +2,7 @@ package net.thedragonskull.trapsmod.block.custom;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -22,11 +23,19 @@ public class StrongChainBlock extends ChainBlock {
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!level.isClientSide && state.getBlock() != newState.getBlock()) {
             BlockPos base = pos.below(4); // Centro de la estructura
+            BlockPos above = pos.above();
 
-            triggerFallingCage(level, base);
+            BlockState aboveState = level.getBlockState(above);
+            if (aboveState.isSolidRender(level, above) && StructureUtils.isCageTrapStructure(level, base, true)) {
 
-            if (StructureUtils.isCageTrapStructure(level, base)) { //TODO: al quitar el chain ya no puede detectar el lvl 4
-                triggerFallingCage(level, base); //TODO: El bloque de copper del centro acaba cayendo al fondo, cambiar layout y que el copper block no sea falling block?
+                BlockPos fencePos = base.above(3); // altura relativa 3
+                BlockState fenceState = level.getBlockState(fencePos);
+
+                if (fenceState.is(BlockTags.FENCES)) {
+                    level.destroyBlock(fencePos, false);
+                }
+
+                triggerFallingCage(level, base);
             }
         }
 
@@ -50,7 +59,7 @@ public class StrongChainBlock extends ChainBlock {
             }
 
             BlockPos below = pos.below(4); // Centro de la estructura esperada
-            if (StructureUtils.isCageTrapStructure(level, below)) {
+            if (StructureUtils.isCageTrapStructure(level, below, false)) {
                 if (placer instanceof Player player) {
                     player.displayClientMessage(Component.literal("✅ ¡Trampa de jaula detectada!"), false);
                 }

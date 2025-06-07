@@ -1,16 +1,20 @@
 package net.thedragonskull.trapsmod.util;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.IronBarsBlock;
+import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Half;
 import net.thedragonskull.trapsmod.block.ModBlocks;
 
 public class StructureUtils {
 
-    public static boolean isCageTrapStructure(Level level, BlockPos origin) {
+    public static boolean isCageTrapStructure(Level level, BlockPos origin, boolean ignoreChain) {
         // Altura relativa 0 a 4
         for (int y = 0; y <= 4; y++) {
             for (int dx = -1; dx <= 1; dx++) {
@@ -37,12 +41,12 @@ public class StructureUtils {
                     } else if (y == 3) {
                         // Techo
                         if (isCenter) {
-                            if (!state.is(Blocks.WAXED_WEATHERED_CUT_COPPER)) {
+                            if (!state.is(BlockTags.FENCES)) {
                                 System.out.println("[DEBUG] Centro de capa 3 no es copper_block en " + pos);
                                 return false;
                             }
                         } else {
-                            if (!state.is(Blocks.WAXED_WEATHERED_CUT_COPPER_SLAB)) {
+                            if (!state.is(Blocks.WAXED_WEATHERED_CUT_COPPER_STAIRS)) {
                                 System.out.println("[DEBUG] Borde de capa 3 no es copper_slab en " + pos);
                                 return false;
                             }
@@ -50,7 +54,7 @@ public class StructureUtils {
                     } else if (y == 4) {
                         // Cuerda (solo centro)
                         if (isCenter) {
-                            if (!state.is(ModBlocks.STRONG_CHAIN.get())) {
+                            if (!ignoreChain && !state.is(ModBlocks.STRONG_CHAIN.get())) {
                                 System.out.println("[DEBUG] Centro de capa 4 no es custom chain en " + pos);
                                 return false;
                             }
@@ -77,6 +81,16 @@ public class StructureUtils {
                     BlockPos pos = base.offset(dx, y, dz);
                     BlockState state = level.getBlockState(pos);
 
+                    if (state.is(Blocks.WAXED_WEATHERED_CUT_COPPER_STAIRS)) {
+                        Direction facing = determineStairFacingFromOffset(dx, dz);
+                        state = state
+                                .setValue(StairBlock.FACING, facing)
+                                .setValue(StairBlock.HALF, Half.BOTTOM); // o BOTTOM según encaje visualmente
+                    } else if (state.is(Blocks.IRON_BARS)) {
+                        state = state
+                                .setValue(IronBarsBlock.NORTH, true);
+                    }
+
                     if (state.isAir()) continue;
 
                     FallingBlockEntity falling = FallingBlockEntity.fall(level, pos, state);
@@ -87,7 +101,17 @@ public class StructureUtils {
                 }
             }
         }
+
     }
+
+    private static Direction determineStairFacingFromOffset(int dx, int dz) {
+        if (dx == 1) return Direction.WEST;
+        if (dx == -1) return Direction.EAST;
+        if (dz == 1) return Direction.NORTH;
+        if (dz == -1) return Direction.SOUTH;
+        return Direction.NORTH; // fallback
+    }
+
 
 
 
