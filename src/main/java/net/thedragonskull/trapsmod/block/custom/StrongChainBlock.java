@@ -22,11 +22,15 @@ public class StrongChainBlock extends ChainBlock {
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!level.isClientSide && state.getBlock() != newState.getBlock()) {
+
+            BlockState chainState = state;
+
             BlockPos base = pos.below(4); // Centro de la estructura
             BlockPos above = pos.above();
-
             BlockState aboveState = level.getBlockState(above);
-            if (aboveState.isSolidRender(level, above) && CageTrapUtils.isCageTrapStructure(level, base, true)) {
+
+            if (aboveState.isSolidRender(level, above) &&
+                    CageTrapUtils.isCageTrapStructure(level, base, false, chainState)) {
 
                 BlockPos fencePos = base.above(3); // altura relativa 3
                 BlockState fenceState = level.getBlockState(fencePos);
@@ -59,7 +63,7 @@ public class StrongChainBlock extends ChainBlock {
             }
 
             BlockPos below = pos.below(4); // Centro de la estructura esperada
-            if (CageTrapUtils.isCageTrapStructure(level, below, false)) {
+            if (CageTrapUtils.isCageTrapStructure(level, below, false, null)) {
                 if (placer instanceof Player player) {
                     player.displayClientMessage(Component.literal("✅ ¡Trampa de jaula detectada!"), false);
                 }

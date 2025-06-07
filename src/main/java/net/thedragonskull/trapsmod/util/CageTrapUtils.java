@@ -14,9 +14,11 @@ import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.StairsShape;
 import net.thedragonskull.trapsmod.block.ModBlocks;
 
+import javax.annotation.Nullable;
+
 public class CageTrapUtils {
 
-    public static boolean isCageTrapStructure(Level level, BlockPos origin, boolean ignoreChain) {
+    public static boolean isCageTrapStructure(Level level, BlockPos origin, boolean ignoreChain, @Nullable BlockState cachedChainState) {
         // Altura relativa 0 a 4
         for (int y = 0; y <= 4; y++) {
             for (int dx = -1; dx <= 1; dx++) {
@@ -54,13 +56,17 @@ public class CageTrapUtils {
                             }
                         }
                     } else if (y == 4) {
-                        // Cuerda (solo centro)
-                        if (isCenter) {
-                            if (!ignoreChain) {
-                                if (!state.is(ModBlocks.STRONG_CHAIN.get()) && state.getValue(ChainBlock.AXIS) != Direction.Axis.Y) { //TODO: arreglar esto
-                                    System.out.println("[DEBUG] Centro de capa 4 no es custom chain en " + pos);
-                                    return false;
-                                }
+                        if (isCenter && !ignoreChain) {
+                            BlockState chain = cachedChainState != null ? cachedChainState : level.getBlockState(pos);
+
+                            if (!chain.is(ModBlocks.STRONG_CHAIN.get())) {
+                                System.out.println("[DEBUG] Centro de capa 4 no es cadena STRONG_CHAIN en " + pos);
+                                return false;
+                            }
+
+                            if (chain.getValue(ChainBlock.AXIS) != Direction.Axis.Y) {
+                                System.out.println("[DEBUG] Cadena no está en vertical. AXIS = " + chain.getValue(ChainBlock.AXIS));
+                                return false;
                             }
                         }
                     }
