@@ -12,9 +12,9 @@ import net.thedragonskull.trapsmod.util.StructureUtils;
 
 import static net.thedragonskull.trapsmod.util.StructureUtils.triggerFallingCage;
 
-public class BellTrapChainBlock extends ChainBlock {
+public class StrongChainBlock extends ChainBlock {
 
-    public BellTrapChainBlock(Properties props) {
+    public StrongChainBlock(Properties props) {
         super(props);
     }
 

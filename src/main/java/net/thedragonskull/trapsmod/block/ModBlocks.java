@@ -12,7 +12,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.thedragonskull.trapsmod.TrapsMod;
-import net.thedragonskull.trapsmod.block.custom.BellTrapChainBlock;
+import net.thedragonskull.trapsmod.block.custom.StrongChainBlock;
 import net.thedragonskull.trapsmod.block.custom.PunjiSticksPlank;
 import net.thedragonskull.trapsmod.item.ModItems;
 
@@ -27,8 +27,8 @@ public class ModBlocks {
             () -> new PunjiSticksPlank(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_YELLOW)
                     .strength(2.0F, 3.0F).sound(SoundType.BAMBOO_WOOD).noOcclusion().ignitedByLava()));
 
-    public static final RegistryObject<Block> BELL_TRAP_CHAIN = registerBlock("bell_trap_chain",
-            () -> new BellTrapChainBlock(BlockBehaviour.Properties.copy(Blocks.CHAIN)));
+    public static final RegistryObject<Block> STRONG_CHAIN = registerBlock("strong_chain",
+            () -> new StrongChainBlock(BlockBehaviour.Properties.copy(Blocks.CHAIN)));
 
 
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block) {

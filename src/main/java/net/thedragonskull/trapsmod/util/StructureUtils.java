@@ -50,7 +50,7 @@ public class StructureUtils {
                     } else if (y == 4) {
                         // Cuerda (solo centro)
                         if (isCenter) {
-                            if (!state.is(ModBlocks.BELL_TRAP_CHAIN.get())) {
+                            if (!state.is(ModBlocks.STRONG_CHAIN.get())) {
                                 System.out.println("[DEBUG] Centro de capa 4 no es custom chain en " + pos);
                                 return false;
                             }
