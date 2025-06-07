@@ -3,6 +3,7 @@ package net.thedragonskull.trapsmod.block;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -11,6 +12,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.thedragonskull.trapsmod.TrapsMod;
+import net.thedragonskull.trapsmod.block.custom.BellTrapChainBlock;
 import net.thedragonskull.trapsmod.block.custom.PunjiSticksPlank;
 import net.thedragonskull.trapsmod.item.ModItems;
 
@@ -24,6 +26,9 @@ public class ModBlocks {
     public static final RegistryObject<Block> PUNJI_STICKS_PLANK = registerBlock("punji_sticks_plank",
             () -> new PunjiSticksPlank(BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_YELLOW)
                     .strength(2.0F, 3.0F).sound(SoundType.BAMBOO_WOOD).noOcclusion().ignitedByLava()));
+
+    public static final RegistryObject<Block> BELL_TRAP_CHAIN = registerBlock("bell_trap_chain",
+            () -> new BellTrapChainBlock(BlockBehaviour.Properties.copy(Blocks.CHAIN)));
 
 
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block) {
