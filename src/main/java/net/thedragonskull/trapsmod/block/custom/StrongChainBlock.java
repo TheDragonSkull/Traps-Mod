@@ -9,9 +9,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.ChainBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.thedragonskull.trapsmod.util.StructureUtils;
+import net.thedragonskull.trapsmod.util.CageTrapUtils;
 
-import static net.thedragonskull.trapsmod.util.StructureUtils.triggerFallingCage;
+import static net.thedragonskull.trapsmod.util.CageTrapUtils.triggerFallingCage;
 
 public class StrongChainBlock extends ChainBlock {
 
@@ -26,7 +26,7 @@ public class StrongChainBlock extends ChainBlock {
             BlockPos above = pos.above();
 
             BlockState aboveState = level.getBlockState(above);
-            if (aboveState.isSolidRender(level, above) && StructureUtils.isCageTrapStructure(level, base, true)) {
+            if (aboveState.isSolidRender(level, above) && CageTrapUtils.isCageTrapStructure(level, base, true)) {
 
                 BlockPos fencePos = base.above(3); // altura relativa 3
                 BlockState fenceState = level.getBlockState(fencePos);
@@ -59,7 +59,7 @@ public class StrongChainBlock extends ChainBlock {
             }
 
             BlockPos below = pos.below(4); // Centro de la estructura esperada
-            if (StructureUtils.isCageTrapStructure(level, below, false)) {
+            if (CageTrapUtils.isCageTrapStructure(level, below, false)) {
                 if (placer instanceof Player player) {
                     player.displayClientMessage(Component.literal("✅ ¡Trampa de jaula detectada!"), false);
                 }

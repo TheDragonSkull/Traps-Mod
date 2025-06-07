@@ -21,6 +21,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -402,6 +403,11 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
     public static Direction getConnectedDirection(BlockState pState) {
         Direction direction = pState.getValue(FACING);
         return pState.getValue(PLANK_PART) == PlankPart.BASE ? direction.getOpposite() : direction;
+    }
+
+    @Override
+    public boolean isPathfindable(BlockState pState, BlockGetter pLevel, BlockPos pPos, PathComputationType pType) {
+        return true;
     }
 
     @Override
