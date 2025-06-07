@@ -33,8 +33,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.EnumMap;
 import java.util.Map;
 
-import static net.thedragonskull.trapsmod.util.PunjiStickPlankUtils.isNonBlocking;
-import static net.thedragonskull.trapsmod.util.PunjiStickPlankUtils.shouldDestroyAndDrop;
+import static net.thedragonskull.trapsmod.util.PunjiStickPlankUtils.*;
 
 public class PunjiSticksPlank extends HorizontalDirectionalBlock implements EntityBlock {
 
@@ -72,7 +71,7 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
         BlockPos basePos = switch (part) {
             case BASE -> pos;
             case EXTENSION -> pos.relative(facing.getOpposite());
-            default -> null; // TOP no activa nada
+            default -> null;
         };
 
         if (basePos == null) return;
@@ -83,10 +82,10 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
         boolean isBaseActive = baseState.getValue(BASE_ACTIVE);
         boolean isExtActive = baseState.getValue(EXTENSION_ACTIVE);
 
-        // Ya está activa, no hacer nada
+        // If active, does nothing
         if (isBaseActive || isExtActive) return;
 
-        // Chequeo de bloque encima (como en use)
+        // Check block above
         BlockPos aboveBase = basePos.above();
         BlockPos aboveExt = basePos.relative(facing).above();
 
@@ -95,7 +94,7 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
 
         if (!isNonBlocking(stateAboveBase, level, aboveBase) || !isNonBlocking(stateAboveExt, level, aboveExt)) return;
 
-        // Activar según desde qué parte pisaron
+        // Check stepped on part
         String anim;
         if (part == PlankPart.BASE) {
             baseState = baseState.setValue(BASE_ACTIVE, true);
@@ -116,7 +115,6 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
                     (randomsource.nextFloat() - randomsource.nextFloat()) * 0.2F + 1.0F);
         }
 
-        // Limpiar bloques reemplazables encima
         if (shouldDestroyAndDrop(stateAboveBase, level, aboveBase)) {
             level.destroyBlock(aboveBase, true);
         }
@@ -124,7 +122,7 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
             level.destroyBlock(aboveExt, true);
         }
 
-        // Colocar el TOP si libre
+        // Set TOP part
         if (level.isEmptyBlock(aboveBase)) {
             BlockState topBlock = this.defaultBlockState()
                     .setValue(FACING, facing)
@@ -172,7 +170,7 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
 
             String anim;
 
-            // 👇 Decidir qué animación reproducir en base al estado actual
+            // Play animation
             if (isBaseActive) {
                 // reset base
                 baseState = baseState.setValue(PunjiSticksPlank.BASE_ACTIVE, false);
@@ -182,7 +180,7 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
                 baseState = baseState.setValue(PunjiSticksPlank.EXTENSION_ACTIVE, false);
                 anim = "extension_reset";
             } else {
-                // Ninguna está activa, activar según el lado usado
+                // If none active, play based on side used
                 if (part == PlankPart.BASE) {
                     baseState = baseState.setValue(PunjiSticksPlank.BASE_ACTIVE, true);
                     anim = "base_activate";
@@ -192,7 +190,6 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
                 }
             }
 
-            // Actualizar estado y animación
             level.setBlock(basePos, baseState, 3);
 
             BlockEntity be = level.getBlockEntity(basePos);
@@ -227,11 +224,10 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
                             .setValue(BASE_ACTIVE, false)
                             .setValue(EXTENSION_ACTIVE, false);
 
-                    // Colocar el TOP si libre
+                    // Set TOP part
                     level.setBlock(topPos, newBlock, 3);
                 }
             } else {
-                // Si no está activo, eliminar lo que esté encima
                 BlockPos topPos = basePos.above();
                 BlockState topState = level.getBlockState(topPos);
                 if (topState.getBlock() instanceof PunjiSticksPlank) {
@@ -250,13 +246,7 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
         if (state.getValue(BASE_ACTIVE) || state.getValue(EXTENSION_ACTIVE)) {
             Direction facing = state.getValue(FACING);
 
-            return switch (facing) {
-                case SOUTH -> Block.box(0, 0, 15, 16, 16, 17); // ✔️ original
-                case NORTH -> Block.box(0, 0, -1, 16, 16, 1);
-                case EAST  -> Block.box(15, 0, 0, 17, 16, 16);
-                case WEST  -> Block.box(-1, 0, 0, 1, 16, 16);
-                default    -> Shapes.empty(); // no debería pasar
-            };
+            return OPEN_SHAPES.getOrDefault(facing, Shapes.empty());
         }
 
         return getShape(state, level, pos, pContext);
@@ -270,18 +260,11 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
         boolean active = state.getValue(BASE_ACTIVE) || state.getValue(EXTENSION_ACTIVE);
 
         if (part == PlankPart.TOP || (part == PlankPart.BASE && active)) {
-            // TOP y BASE (cuando está activa) comparten shape manual según FACING
-            return switch (facing) {
-                case SOUTH -> Block.box(0, 0, 15, 16, 16, 17); // ✔️ original
-                case NORTH -> Block.box(0, 0, -1, 16, 16, 1);
-                case EAST  -> Block.box(15, 0, 0, 17, 16, 16);
-                case WEST  -> Block.box(-1, 0, 0, 1, 16, 16);
-                default    -> Shapes.empty(); // no debería pasar
-            };
+            return OPEN_SHAPES.getOrDefault(facing, Shapes.empty());
         }
 
         if (part == PlankPart.BASE) {
-            return SHAPE_CLOSED; // Ya rotada según FACING
+            return SHAPE_CLOSED;
         }
 
         // EXTENSION
@@ -339,15 +322,14 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
 
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
-
-/*        if (internalRemove) {
-            super.onRemove(state, level, pos, newState, isMoving); TODO: si añado esto el top no se elimina y si lo quito, dropea en creativo
+        if (internalRemove) {
+            super.onRemove(state, level, pos, newState, isMoving);
             return;
-        }*/
+        }
 
         if (state.getBlock() != newState.getBlock()) {
-            Direction facing = state.getValue(FACING);
-            PlankPart part = state.getValue(PLANK_PART);
+            Direction facing = state.getValue(PunjiSticksPlank.FACING);
+            PlankPart part = state.getValue(PunjiSticksPlank.PLANK_PART);
 
             BlockPos basePos = switch (part) {
                 case BASE -> pos;
@@ -355,71 +337,41 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
                 case EXTENSION -> pos.relative(facing.getOpposite());
             };
 
-            // Eliminar BASE si no estamos ya en BASE
-            if (part != PlankPart.BASE) {
-                BlockState baseState = level.getBlockState(basePos);
-                if (baseState.getBlock() instanceof PunjiSticksPlank &&
-                        baseState.getValue(PLANK_PART) == PlankPart.BASE) {
-                    internalRemove = true;
-                    level.removeBlock(basePos, false);
-                    internalRemove = false;
+            BlockPos extPos = basePos.relative(facing);
+            BlockPos topPos = basePos.above();
 
-                    if (!level.isClientSide) {
-                        popResource(level, basePos, new ItemStack(this.asItem()));
-                    }
+            internalRemove = true;
+
+            // BASE
+            if (level.getBlockState(basePos).getBlock() instanceof PunjiSticksPlank) {
+                level.setBlock(basePos, Blocks.AIR.defaultBlockState(), 35);
+            }
+
+            // EXTENSION
+            if (level.getBlockState(extPos).getBlock() instanceof PunjiSticksPlank) {
+                level.setBlock(extPos, Blocks.AIR.defaultBlockState(), 35);
+            }
+
+            // TOP
+            if (level.getBlockState(topPos).getBlock() instanceof PunjiSticksPlank) {
+                level.setBlock(topPos, Blocks.AIR.defaultBlockState(), 35);
+            }
+
+            internalRemove = false;
+
+            // Only drop one time when any part broken
+            if (!level.isClientSide) {
+                Player nearest = level.getNearestPlayer(pos.getX(), pos.getY(), pos.getZ(), 5.0D, false);
+                boolean isCreative = nearest != null && nearest.isCreative();
+
+                if (!isCreative) {
+                    popResource(level, basePos, new ItemStack(this.asItem()));
                 }
             }
-
-            if (!level.isClientSide && part == PlankPart.BASE) {
-                popResource(level, pos, new ItemStack(this.asItem()));
-            }
-
-            // Eliminar EXTENSION (posición correcta)
-            BlockPos extPos = basePos.relative(facing);
-            BlockState extState = level.getBlockState(extPos);
-            if (extState.getBlock() instanceof PunjiSticksPlank &&
-                    extState.getValue(PLANK_PART) == PlankPart.EXTENSION) {
-                internalRemove = true;
-                level.removeBlock(extPos, false);
-                internalRemove = false;
-            }
-
-            // Eliminar TOP (posición correcta)
-            BlockPos topPos = basePos.above();
-            BlockState topState = level.getBlockState(topPos);
-            if (topState.getBlock() instanceof PunjiSticksPlank &&
-                    topState.getValue(PLANK_PART) == PlankPart.TOP) {
-                internalRemove = true;
-                level.removeBlock(topPos, false);
-                internalRemove = false;
-            }
-
         }
 
         super.onRemove(state, level, pos, newState, isMoving);
     }
-
-    @Override
-    public void playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
-        if (!level.isClientSide && player.isCreative()) {
-            Direction facing = state.getValue(FACING);
-            PlankPart part = state.getValue(PLANK_PART);
-
-            BlockPos basePos = switch (part) {
-                case BASE -> pos;
-                case TOP -> pos.below();
-                case EXTENSION -> pos.relative(facing.getOpposite());
-            };
-
-            // Evitar drop en creativo
-            internalRemove = true;
-            level.setBlock(basePos, Blocks.AIR.defaultBlockState(), 35);
-            internalRemove = false;
-        }
-
-        super.playerWillDestroy(level, pos, state, player);
-    }
-
 
     @Override
     public RenderShape getRenderShape(BlockState pState) {
@@ -430,8 +382,6 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
     public BlockState updateShape(BlockState state, Direction facing, BlockState facingState, LevelAccessor level,
                                   BlockPos currentPos, BlockPos facingPos) {
         PlankPart part = state.getValue(PLANK_PART);
-
-        // ¿La dirección en la que debería estar el otro bloque?
         Direction expectedOtherPartDir = getNeighbourDirection(part, state.getValue(FACING));
 
         if (facing == expectedOtherPartDir) {
@@ -439,7 +389,7 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
                     && facingState.getValue(PLANK_PART) != part
                     && facingState.getValue(FACING) == state.getValue(FACING);
 
-            return isValidPair ? state : Blocks.AIR.defaultBlockState(); // se rompe si el otro bloque no es válido
+            return isValidPair ? state : Blocks.AIR.defaultBlockState();
         }
 
         return super.updateShape(state, facing, facingState, level, currentPos, facingPos);
