@@ -79,7 +79,6 @@ public class StructureUtils {
     }
 
     public static void triggerFallingCage(Level level, BlockPos base) {
-        System.out.println("[DEBUG] Iniciando caída de jaula...");
 
         for (int y = 0; y <= 3; y++) {
             for (int dx = -1; dx <= 1; dx++) {
@@ -97,22 +96,52 @@ public class StructureUtils {
                             state = state.setValue(StairBlock.FACING, Direction.NORTH)
                                     .setValue(StairBlock.HALF, Half.BOTTOM)
                                     .setValue(StairBlock.SHAPE, StairsShape.OUTER_LEFT);
+                        } else if (dx == -1 && dz == -1) {
+                            state = state.setValue(StairBlock.FACING, Direction.SOUTH)
+                                    .setValue(StairBlock.HALF, Half.BOTTOM)
+                                    .setValue(StairBlock.SHAPE, StairsShape.OUTER_LEFT);
+                        } else if (dx == -1 && dz == 1) {
+                            state = state.setValue(StairBlock.FACING, Direction.NORTH)
+                                    .setValue(StairBlock.HALF, Half.BOTTOM)
+                                    .setValue(StairBlock.SHAPE, StairsShape.OUTER_RIGHT);
                         }
+
                     } else if (state.is(Blocks.IRON_BARS)) {
-                        if (state.is(Blocks.IRON_BARS)) {
-                            boolean north = dz == -1;
-                            boolean south = dz == 1;
-                            boolean west  = dx == -1;
-                            boolean east  = dx == 1;
-
+                        if (dx == -1 && dz == -1) { // esquina NO
                             state = state
-                                    .setValue(IronBarsBlock.NORTH, north)
-                                    .setValue(IronBarsBlock.SOUTH, south)
-                                    .setValue(IronBarsBlock.WEST, west)
-                                    .setValue(IronBarsBlock.EAST, east);
+                                    .setValue(IronBarsBlock.EAST, true)
+                                    .setValue(IronBarsBlock.SOUTH, true);
+                        } else if (dx == -1 && dz == 0) { // lado O
+                            state = state
+                                    .setValue(IronBarsBlock.NORTH, true)
+                                    .setValue(IronBarsBlock.SOUTH, true);
+                        } else if (dx == -1 && dz == 1) { // esquina SO
+                            state = state
+                                    .setValue(IronBarsBlock.EAST, true)
+                                    .setValue(IronBarsBlock.NORTH, true);
+                        } else if (dx == 0 && dz == -1) { // lado N
+                            state = state
+                                    .setValue(IronBarsBlock.EAST, true)
+                                    .setValue(IronBarsBlock.WEST, true);
+                        } else if (dx == 0 && dz == 1) { // lado S
+                            state = state
+                                    .setValue(IronBarsBlock.EAST, true)
+                                    .setValue(IronBarsBlock.WEST, true);
+                        } else if (dx == 1 && dz == -1) { // esquina NE
+                            state = state
+                                    .setValue(IronBarsBlock.WEST, true)
+                                    .setValue(IronBarsBlock.SOUTH, true);
+                        } else if (dx == 1 && dz == 0) { // lado E
+                            state = state
+                                    .setValue(IronBarsBlock.NORTH, true)
+                                    .setValue(IronBarsBlock.SOUTH, true);
+                        } else if (dx == 1 && dz == 1) { // esquina SE
+                            state = state
+                                    .setValue(IronBarsBlock.WEST, true)
+                                    .setValue(IronBarsBlock.NORTH, true);
                         }
-
                     }
+
 
 
                     if (state.isAir()) continue;
