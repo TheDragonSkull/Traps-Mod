@@ -5,10 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.ChainBlock;
-import net.minecraft.world.level.block.IronBarsBlock;
-import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.StairsShape;
@@ -37,8 +34,8 @@ public class CageTrapUtils {
                                 return false;
                             }
                         } else {
-                            if (!(state.getBlock() instanceof IronBarsBlock)) {
-                                System.out.println("[DEBUG] Capa " + y + " borde no es iron_bars en " + pos);
+                            if (!(state.is(ModTags.Blocks.CAGE_TRAP_WALLS))) {
+                                System.out.println("[DEBUG] Capa " + y + " borde no es bloque de pared válido en " + pos);
                                 return false;
                             }
                         }
@@ -78,8 +75,7 @@ public class CageTrapUtils {
     }
 
     public static void triggerFallingCage(Level level, BlockPos base) {
-
-        for (int y = 0; y <= 3; y++) {
+        for (int y = 0; y <= 3; y++) { //TODO: puede que el problema esté aqui
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dz = -1; dz <= 1; dz++) {
                     BlockPos pos = base.offset(dx, y, dz);
@@ -88,14 +84,17 @@ public class CageTrapUtils {
                     if (state.is(BlockTags.STAIRS)) {
                         state = getConfiguredStairState(state, dx, dz);
 
-                    } else if ((state.getBlock() instanceof IronBarsBlock)) {
+                    } else if (state.getBlock() instanceof IronBarsBlock) {
+                        state = getConfiguredBarState(state, dx, dz);
+
+                    } else if (state.getBlock() instanceof FenceBlock) {
                         state = getConfiguredBarState(state, dx, dz);
                     }
 
                     if (state.isAir()) continue;
 
                     FallingBlockEntity falling = FallingBlockEntity.fall(level, pos, state);
-                    falling.dropItem = false;
+                    falling.dropItem = true;
 
                     level.removeBlock(pos, false);
                     level.addFreshEntity(falling);
@@ -123,6 +122,18 @@ public class CageTrapUtils {
         }
 
         return state;
+    }
+
+    private static Direction determineStairFacingFromOffset(int dx, int dz) {
+        if (dx == -1 && dz == -1) return Direction.SOUTH; // esquina NO
+        if (dx == -1 && dz == 0)  return Direction.EAST;  // lado O
+        if (dx == -1 && dz == 1)  return Direction.NORTH; // esquina SO
+        if (dx == 0  && dz == -1) return Direction.SOUTH; // lado N
+        if (dx == 0  && dz == 1)  return Direction.NORTH; // lado S
+        if (dx == 1  && dz == -1) return Direction.SOUTH; // esquina NE
+        if (dx == 1  && dz == 0)  return Direction.WEST;  // lado E
+        if (dx == 1  && dz == 1)  return Direction.WEST;  // esquina SE
+        return Direction.NORTH; // fallback
     }
 
     private static BlockState getConfiguredBarState(BlockState state, int dx, int dz) {
@@ -153,18 +164,6 @@ public class CageTrapUtils {
         }
 
         return state;
-    }
-
-    private static Direction determineStairFacingFromOffset(int dx, int dz) {
-        if (dx == -1 && dz == -1) return Direction.SOUTH; // esquina NO
-        if (dx == -1 && dz == 0)  return Direction.EAST;  // lado O
-        if (dx == -1 && dz == 1)  return Direction.NORTH; // esquina SO
-        if (dx == 0  && dz == -1) return Direction.SOUTH; // lado N
-        if (dx == 0  && dz == 1)  return Direction.NORTH; // lado S
-        if (dx == 1  && dz == -1) return Direction.SOUTH; // esquina NE
-        if (dx == 1  && dz == 0)  return Direction.WEST;  // lado E
-        if (dx == 1  && dz == 1)  return Direction.WEST;  // esquina SE
-        return Direction.NORTH; // fallback
     }
 
 

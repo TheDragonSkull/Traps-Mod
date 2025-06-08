@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:iron_bars",
+    "#minecraft:fences",
+    "#minecraft:walls",
+    "minecraft:glass_pane",
+    "#forge:stained_glass_panes"
+  ]
+}
