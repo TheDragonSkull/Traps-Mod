@@ -30,12 +30,12 @@ public class CageTrapUtils {
                         // Jaula de Iron Bars (excepto centro)
                         if (isCenter) {
                             if (!state.isAir()) {
-                                System.out.println("[DEBUG] Capa " + y + " centro no es aire en " + pos);
+                                //System.out.println("[DEBUG] Capa " + y + " centro no es aire en " + pos);
                                 return false;
                             }
                         } else {
                             if (!(state.is(ModTags.Blocks.CAGE_TRAP_WALLS))) {
-                                System.out.println("[DEBUG] Capa " + y + " borde no es bloque de pared válido en " + pos);
+                                //System.out.println("[DEBUG] Capa " + y + " borde no es bloque de pared válido en " + pos);
                                 return false;
                             }
                         }
@@ -43,12 +43,12 @@ public class CageTrapUtils {
                         // Techo
                         if (isCenter) {
                             if (!state.is(BlockTags.FENCES)) {
-                                System.out.println("[DEBUG] Centro de capa 3 no es copper_block en " + pos);
+                                //System.out.println("[DEBUG] Centro de capa 3 no es copper_block en " + pos);
                                 return false;
                             }
                         } else {
                             if (!state.is(BlockTags.STAIRS)) {
-                                System.out.println("[DEBUG] Borde de capa 3 no es copper_slab en " + pos);
+                                //System.out.println("[DEBUG] Borde de capa 3 no es copper_slab en " + pos);
                                 return false;
                             }
                         }
@@ -57,12 +57,12 @@ public class CageTrapUtils {
                             BlockState chain = cachedChainState != null ? cachedChainState : level.getBlockState(pos);
 
                             if (!chain.is(ModBlocks.STRONG_CHAIN.get())) {
-                                System.out.println("[DEBUG] Centro de capa 4 no es cadena STRONG_CHAIN en " + pos);
+                                //System.out.println("[DEBUG] Centro de capa 4 no es cadena STRONG_CHAIN en " + pos);
                                 return false;
                             }
 
                             if (chain.getValue(ChainBlock.AXIS) != Direction.Axis.Y) {
-                                System.out.println("[DEBUG] Cadena no está en vertical. AXIS = " + chain.getValue(ChainBlock.AXIS));
+                                //System.out.println("[DEBUG] Cadena no está en vertical. AXIS = " + chain.getValue(ChainBlock.AXIS));
                                 return false;
                             }
                         }
@@ -74,36 +74,38 @@ public class CageTrapUtils {
         return true;
     }
 
-    public static void triggerFallingCage(Level level, BlockPos base) {
-        for (int y = 0; y <= 3; y++) { //TODO: puede que el problema esté aqui
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dz = -1; dz <= 1; dz++) {
-                    BlockPos pos = base.offset(dx, y, dz);
-                    BlockState state = level.getBlockState(pos);
+    public static void dropCageLayer(Level level, BlockPos base, int y) {
 
-                    if (state.is(BlockTags.STAIRS)) {
-                        state = getConfiguredStairState(state, dx, dz);
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
 
-                    } else if (state.getBlock() instanceof IronBarsBlock) {
-                        state = getConfiguredBarState(state, dx, dz);
+                BlockPos pos = base.offset(dx, y, dz);
+                BlockState state = level.getBlockState(pos);
+                if (state.isAir()) continue;
 
-                    } else if (state.getBlock() instanceof FenceBlock) {
-                        state = getConfiguredBarState(state, dx, dz);
-                    }
+                Block block = state.getBlock();
 
-                    if (state.isAir()) continue;
+                if (state.is(BlockTags.STAIRS)) {
+                    state = getConfiguredStairState(state, dx, dz);
 
-                    FallingBlockEntity falling = FallingBlockEntity.fall(level, pos, state);
-                    falling.dropItem = true;
+                } else if (block instanceof IronBarsBlock) {
+                    state = getConfiguredBarState(state, dx, dz);
 
-                    level.removeBlock(pos, false);
-                    level.addFreshEntity(falling);
+                } else if (block instanceof FenceBlock) {
+                    state = getConfiguredBarState(state, dx, dz);
                 }
+
+                FallingBlockEntity falling = FallingBlockEntity.fall(level, pos, state);
+                falling.dropItem = false;
+
+                level.removeBlock(pos, false);
+                level.addFreshEntity(falling);
             }
         }
     }
 
-    private static BlockState getConfiguredStairState(BlockState state, int dx, int dz) {
+
+    public static BlockState getConfiguredStairState(BlockState state, int dx, int dz) {
         Direction facing = determineStairFacingFromOffset(dx, dz);
         state = state
                 .setValue(StairBlock.FACING, facing)
@@ -136,7 +138,7 @@ public class CageTrapUtils {
         return Direction.NORTH; // fallback
     }
 
-    private static BlockState getConfiguredBarState(BlockState state, int dx, int dz) {
+    public static BlockState getConfiguredBarState(BlockState state, int dx, int dz) {
         if (dx == -1 && dz == -1) { // esquina NO
             return state.setValue(IronBarsBlock.EAST, true)
                     .setValue(IronBarsBlock.SOUTH, true);
@@ -165,11 +167,5 @@ public class CageTrapUtils {
 
         return state;
     }
-
-
-
-
-
-
 
 }

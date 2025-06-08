@@ -30,3 +30,4 @@ mandatory = true
 versionRange = "${geckolib_version}"
 ordering = "NONE"
 
+mixinConfigs = ["trapsmod.mixins.json"]

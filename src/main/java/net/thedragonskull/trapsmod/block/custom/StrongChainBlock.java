@@ -9,9 +9,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.ChainBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.thedragonskull.trapsmod.block.ModBlocks;
 import net.thedragonskull.trapsmod.util.CageTrapUtils;
-
-import static net.thedragonskull.trapsmod.util.CageTrapUtils.triggerFallingCage;
 
 public class StrongChainBlock extends ChainBlock {
 
@@ -22,24 +21,18 @@ public class StrongChainBlock extends ChainBlock {
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!level.isClientSide && state.getBlock() != newState.getBlock()) {
-
-            BlockState chainState = state;
-
-            BlockPos base = pos.below(4); // Centro de la estructura
+            BlockPos base = pos.below(4);
             BlockPos above = pos.above();
-            BlockState aboveState = level.getBlockState(above);
 
-            if (aboveState.isSolidRender(level, above) &&
-                    CageTrapUtils.isCageTrapStructure(level, base, false, chainState)) {
+            if (level.getBlockState(above).isSolidRender(level, above) &&
+                    CageTrapUtils.isCageTrapStructure(level, base, false, state)) {
 
-                BlockPos fencePos = base.above(3); // altura relativa 3
-                BlockState fenceState = level.getBlockState(fencePos);
-
-                if (fenceState.is(BlockTags.FENCES)) {
+                BlockPos fencePos = base.above(3);
+                if (level.getBlockState(fencePos).is(BlockTags.FENCES)) {
                     level.destroyBlock(fencePos, false);
                 }
 
-                triggerFallingCage(level, base);
+                level.setBlock(base.above(4), ModBlocks.CAGE_TRAP_TICKER.get().defaultBlockState(), 3);
             }
         }
 
@@ -57,7 +50,7 @@ public class StrongChainBlock extends ChainBlock {
 
             if (!aboveState.isSolidRender(level, above)) {
                 if (placer instanceof Player player) {
-                    player.displayClientMessage(Component.literal("❌ No hay soporte sólido encima."), false);
+                    player.displayClientMessage(Component.literal("❌ No hay soporte sólido encima."), false); //TODO: translatables
                 }
                 return;
             }

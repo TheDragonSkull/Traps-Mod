@@ -12,6 +12,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.thedragonskull.trapsmod.TrapsMod;
+import net.thedragonskull.trapsmod.block.custom.CageTrapTickerBlock;
 import net.thedragonskull.trapsmod.block.custom.StrongChainBlock;
 import net.thedragonskull.trapsmod.block.custom.PunjiSticksPlank;
 import net.thedragonskull.trapsmod.item.ModItems;
@@ -29,6 +30,9 @@ public class ModBlocks {
 
     public static final RegistryObject<Block> STRONG_CHAIN = registerBlock("strong_chain",
             () -> new StrongChainBlock(BlockBehaviour.Properties.copy(Blocks.CHAIN)));
+
+    public static final RegistryObject<Block> CAGE_TRAP_TICKER = registerBlock("cage_trap_ticker",
+            () -> new CageTrapTickerBlock(BlockBehaviour.Properties.copy(Blocks.BARRIER).noCollission().noOcclusion().noLootTable()));
 
 
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block) {

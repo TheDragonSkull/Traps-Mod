@@ -17,6 +17,11 @@ public class ModBlockEntities {
                     BlockEntityType.Builder.of(PunjiSticksPlankBE::new,
                             ModBlocks.PUNJI_STICKS_PLANK.get()).build(null));
 
+    public static final RegistryObject<BlockEntityType<CageTrapTickerBlockEntity>> CAGE_TRAP_TICKER_BE =
+            BLOCK_ENTITIES.register("cage_trap_ticker_be", () ->
+                    BlockEntityType.Builder.of(CageTrapTickerBlockEntity::new,
+                            ModBlocks.CAGE_TRAP_TICKER.get()).build(null));
+
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);
     }
