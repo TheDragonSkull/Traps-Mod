@@ -55,7 +55,7 @@ public class StrongChainBlock extends ChainBlock {
                 return;
             }
 
-            BlockPos below = pos.below(4); // Centro de la estructura esperada
+            BlockPos below = pos.below(4);
             if (CageTrapUtils.isCageTrapStructure(level, below, false, null)) {
                 if (placer instanceof Player player) {
                     player.displayClientMessage(Component.translatable("message.trapsmod.cage_trap.valid_structure"), false);

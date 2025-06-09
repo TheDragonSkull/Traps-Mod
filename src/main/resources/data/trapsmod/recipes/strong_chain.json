@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "X",
+    "X",
+    "X"
+  ],
+  "key": {
+    "X":{
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "item": "trapsmod:strong_chain",
+    "count": 1
+  },
+  "show_notification": true
+}

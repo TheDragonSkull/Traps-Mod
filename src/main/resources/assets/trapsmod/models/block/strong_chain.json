@@ -1,5 +1,6 @@
 {
-  "parent": "block/block",
+  "parent": "minecraft:block/block",
+  "render_type": "cutout",
   "textures": {
     "particle": "trapsmod:block/strong_chain",
     "all": "trapsmod:block/strong_chain"
