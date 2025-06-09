@@ -33,7 +33,6 @@ public class StrongChainBlock extends ChainBlock {
                 }
 
                 level.setBlock(base.above(2), ModBlocks.CAGE_TRAP_TICKER.get().defaultBlockState(), 3);
-                //TODO: comprobar moviendo chain con piston a ver si el ticker quita el piston // ponerlo en el aire central de la cage
             }
         }
 
@@ -51,7 +50,7 @@ public class StrongChainBlock extends ChainBlock {
 
             if (!aboveState.isSolidRender(level, above)) {
                 if (placer instanceof Player player) {
-                    player.displayClientMessage(Component.literal("❌ No hay soporte sólido encima."), false); //TODO: translatables
+                    player.displayClientMessage(Component.translatable("message.trapsmod.cage_trap.no_support"), false);
                 }
                 return;
             }
@@ -59,11 +58,11 @@ public class StrongChainBlock extends ChainBlock {
             BlockPos below = pos.below(4); // Centro de la estructura esperada
             if (CageTrapUtils.isCageTrapStructure(level, below, false, null)) {
                 if (placer instanceof Player player) {
-                    player.displayClientMessage(Component.literal("✅ ¡Trampa de jaula detectada!"), false);
+                    player.displayClientMessage(Component.translatable("message.trapsmod.cage_trap.valid_structure"), false);
                 }
             } else {
                 if (placer instanceof Player player) {
-                    player.displayClientMessage(Component.literal("❌ Estructura inválida."), false);
+                    player.displayClientMessage(Component.translatable("message.trapsmod.cage_trap.invalid_structure"), false);
                 }
             }
         }
