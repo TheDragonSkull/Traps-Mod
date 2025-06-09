@@ -28,7 +28,7 @@ public class CageTrapTickerBlockEntity extends BlockEntity {
 
         if (tickCounter >= 4) {
             tickCounter = 0;
-            CageTrapUtils.dropCageLayer(level, worldPosition.below(4), currentLayer);
+            CageTrapUtils.dropCageLayer(level, worldPosition.below(2), currentLayer);
             currentLayer++;
 
             if (currentLayer > 3) {

@@ -32,7 +32,8 @@ public class StrongChainBlock extends ChainBlock {
                     level.destroyBlock(fencePos, false);
                 }
 
-                level.setBlock(base.above(4), ModBlocks.CAGE_TRAP_TICKER.get().defaultBlockState(), 3);
+                level.setBlock(base.above(2), ModBlocks.CAGE_TRAP_TICKER.get().defaultBlockState(), 3);
+                //TODO: comprobar moviendo chain con piston a ver si el ticker quita el piston // ponerlo en el aire central de la cage
             }
         }
 
