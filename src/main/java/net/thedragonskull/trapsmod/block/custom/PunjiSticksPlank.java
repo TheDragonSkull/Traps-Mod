@@ -383,6 +383,24 @@ public class PunjiSticksPlank extends HorizontalDirectionalBlock implements Enti
     public BlockState updateShape(BlockState state, Direction facing, BlockState facingState, LevelAccessor level,
                                   BlockPos currentPos, BlockPos facingPos) {
         PlankPart part = state.getValue(PLANK_PART);
+
+        // Destroys block placed behind TOP
+        if (part == PlankPart.TOP) {
+            Direction facingDir = state.getValue(FACING);
+
+            if (facing == facingDir) {
+                if (!facingState.isAir()) {
+                    if (level instanceof Level realLevel && !realLevel.isClientSide) {
+                        BlockPos otherPos = facingPos;
+                        realLevel.destroyBlock(otherPos, true);
+                    }
+                }
+                return state;
+            }
+
+            return state;
+        }
+
         Direction expectedOtherPartDir = getNeighbourDirection(part, state.getValue(FACING));
 
         if (facing == expectedOtherPartDir) {
