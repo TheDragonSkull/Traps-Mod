@@ -11,6 +11,9 @@ public class ModTags {
     public static class Blocks {
         public static final TagKey<Block> CAGE_TRAP_WALLS = TagKey.create(Registries.BLOCK,
                 ResourceLocation.fromNamespaceAndPath(TrapsMod.MOD_ID, "cage_trap_walls"));
+
+        public static final TagKey<Block> SHARPENED_BAMBOO_PLANTABLE_ON = TagKey.create(Registries.BLOCK,
+                ResourceLocation.fromNamespaceAndPath(TrapsMod.MOD_ID, "sharpened_bamboo_plantable_on"));
     }
 
 }
