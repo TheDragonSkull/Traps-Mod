@@ -17,6 +17,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.thedragonskull.trapsmod.TrapsMod;
 import net.thedragonskull.trapsmod.block.custom.CageTrapTickerBlock;
+import net.thedragonskull.trapsmod.block.custom.SharpenedBamboo;
 import net.thedragonskull.trapsmod.block.custom.StrongChainBlock;
 import net.thedragonskull.trapsmod.block.custom.PunjiSticksPlank;
 import net.thedragonskull.trapsmod.item.ModItems;
@@ -39,7 +40,7 @@ public class ModBlocks {
             () -> new CageTrapTickerBlock(BlockBehaviour.Properties.copy(Blocks.BARRIER).noCollission().noOcclusion().noLootTable()));
 
     public static final RegistryObject<Block> SHARPENED_BAMBOO = registerBlock("sharpened_bamboo",
-            () -> new Block(BlockBehaviour.Properties.of().mapColor(MapColor.PLANT).forceSolidOn().instabreak()
+            () -> new SharpenedBamboo(BlockBehaviour.Properties.of().mapColor(MapColor.PLANT).forceSolidOn().instabreak()
                     .strength(1.0F).sound(SoundType.BAMBOO).noOcclusion().dynamicShape().offsetType(BlockBehaviour.OffsetType.XZ)
                     .ignitedByLava().pushReaction(PushReaction.DESTROY).isRedstoneConductor(ModBlocks::never)));
 
