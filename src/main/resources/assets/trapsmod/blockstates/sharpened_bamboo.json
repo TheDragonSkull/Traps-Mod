@@ -1,7 +1,13 @@
 {
 	"variants": {
-		"": {
-			"model": "trapsmod:block/sharpened_bamboo"
-		}
+		"age=0,facing=north": { "model": "trapsmod:block/sharpened_bamboo_age0", "y": 180 },
+		"age=0,facing=east":  { "model": "trapsmod:block/sharpened_bamboo_age0", "y": 270 },
+		"age=0,facing=south": { "model": "trapsmod:block/sharpened_bamboo_age0", "y": 0 },
+		"age=0,facing=west":  { "model": "trapsmod:block/sharpened_bamboo_age0", "y": 90 },
+
+		"age=1,facing=north": { "model": "trapsmod:block/sharpened_bamboo_age1", "y": 180 },
+		"age=1,facing=east":  { "model": "trapsmod:block/sharpened_bamboo_age1", "y": 270 },
+		"age=1,facing=south": { "model": "trapsmod:block/sharpened_bamboo_age1", "y": 0 },
+		"age=1,facing=west":  { "model": "trapsmod:block/sharpened_bamboo_age1", "y": 90 }
 	}
 }
