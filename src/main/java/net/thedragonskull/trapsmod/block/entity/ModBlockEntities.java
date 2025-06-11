@@ -22,6 +22,11 @@ public class ModBlockEntities {
                     BlockEntityType.Builder.of(CageTrapTickerBlockEntity::new,
                             ModBlocks.CAGE_TRAP_TICKER.get()).build(null));
 
+    public static final RegistryObject<BlockEntityType<BearTrapBE>> BEAR_TRAP_BE =
+            BLOCK_ENTITIES.register("bear_trap_be", () ->
+                    BlockEntityType.Builder.of(BearTrapBE::new,
+                            ModBlocks.BEAR_TRAP.get()).build(null));
+
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);
     }

@@ -16,6 +16,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.thedragonskull.trapsmod.block.ModBlocks;
 import net.thedragonskull.trapsmod.block.entity.ModBlockEntities;
+import net.thedragonskull.trapsmod.block.entity.renderer.BearTrapRenderer;
 import net.thedragonskull.trapsmod.block.entity.renderer.PunjiSticksPlankRenderer;
 import net.thedragonskull.trapsmod.item.ModItems;
 import net.thedragonskull.trapsmod.network.PacketHandler;
@@ -63,6 +64,7 @@ public class TrapsMod
         public static void onClientSetup(FMLClientSetupEvent event) {
             event.enqueueWork(() -> {
                 BlockEntityRenderers.register(ModBlockEntities.PUNJI_STICKS_PLANK_BE.get(), PunjiSticksPlankRenderer::new);
+                BlockEntityRenderers.register(ModBlockEntities.BEAR_TRAP_BE.get(), BearTrapRenderer::new);
             });
 
         }
