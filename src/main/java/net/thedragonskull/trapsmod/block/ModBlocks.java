@@ -16,10 +16,7 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.thedragonskull.trapsmod.TrapsMod;
-import net.thedragonskull.trapsmod.block.custom.CageTrapTickerBlock;
-import net.thedragonskull.trapsmod.block.custom.SharpenedBamboo;
-import net.thedragonskull.trapsmod.block.custom.StrongChainBlock;
-import net.thedragonskull.trapsmod.block.custom.PunjiSticksPlank;
+import net.thedragonskull.trapsmod.block.custom.*;
 import net.thedragonskull.trapsmod.item.ModItems;
 
 import java.util.function.Supplier;
@@ -43,6 +40,9 @@ public class ModBlocks {
             () -> new SharpenedBamboo(BlockBehaviour.Properties.of().mapColor(MapColor.PLANT).forceSolidOn().instabreak()
                     .strength(1.0F).sound(SoundType.BAMBOO).noOcclusion().dynamicShape().offsetType(BlockBehaviour.OffsetType.XZ)
                     .ignitedByLava().pushReaction(PushReaction.DESTROY).isRedstoneConductor(ModBlocks::never)));
+
+    public static final RegistryObject<Block> CREAKING_FLOOR = registerBlock("creaking_floor",
+            () -> new CreakingFloorBlock(BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).ignitedByLava().noOcclusion()));
 
 
     private static boolean never(BlockState p_50806_, BlockGetter p_50807_, BlockPos p_50808_) {

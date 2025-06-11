@@ -14,8 +14,13 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.thedragonskull.trapsmod.block.ModBlocks;
+import net.thedragonskull.trapsmod.block.custom.CreakingFloorBlock;
+import net.thedragonskull.trapsmod.block.custom.properties.CustomWoodType;
 
 import java.util.Random;
+
+import static net.thedragonskull.trapsmod.block.custom.CreakingFloorBlock.WOOD_TYPE;
 
 public class Hammer extends Item {
 
@@ -31,7 +36,7 @@ public class Hammer extends Item {
         Player player = pContext.getPlayer();
 
         if (!level.isClientSide && player != null) {
-            CreakingFloorBlock.CustomWoodType woodType = CreakingFloorBlock.getWoodTypeFromBlock(clickedState.getBlock());
+            CustomWoodType woodType = CreakingFloorBlock.getWoodTypeFromBlock(clickedState.getBlock());
             boolean hasNuggets = (player.getItemInHand(InteractionHand.MAIN_HAND).is(Items.IRON_NUGGET) && player.getItemInHand(InteractionHand.MAIN_HAND).getCount() >= 6) ||
                     (player.getItemInHand(InteractionHand.OFF_HAND).is(Items.IRON_NUGGET) && player.getItemInHand(InteractionHand.OFF_HAND).getCount() >= 6);
 
@@ -55,7 +60,7 @@ public class Hammer extends Item {
                 }
 
             } else if (clickedState.is(ModBlocks.CREAKING_FLOOR.get())) {
-                CreakingFloorBlock.CustomWoodType currentWoodType = clickedState.getValue(WOOD_TYPE);
+                CustomWoodType currentWoodType = clickedState.getValue(WOOD_TYPE);
                 Random random = new Random();
                 int nuggetCount = random.nextInt(3) + 1;
 
