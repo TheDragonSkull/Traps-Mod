@@ -20,6 +20,9 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.thedragonskull.trapsmod.block.custom.properties.CustomWoodType;
+import net.thedragonskull.trapsmod.network.C2SCreakingFloorSoundAndSignalPacket;
+import net.thedragonskull.trapsmod.network.PacketHandler;
+import net.thedragonskull.trapsmod.sound.ModSounds;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,13 +33,12 @@ public class CreakingFloorBlock extends Block {
     public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
     private static final Map<BlockPos, Long> lastStepSoundTime = new HashMap<>();
 
-    private boolean isPowered = false;
-
     public CreakingFloorBlock(Properties pProperties) {
         super(pProperties);
         this.registerDefaultState(this.stateDefinition.any()
                 .setValue(WOOD_TYPE, CustomWoodType.OAK)
-                .setValue(OUTPUT_POWER, 0));
+                .setValue(OUTPUT_POWER, 0)
+                .setValue(POWERED, false));
     }
 
     @Override

@@ -18,6 +18,8 @@ import net.thedragonskull.trapsmod.block.ModBlocks;
 import net.thedragonskull.trapsmod.block.entity.ModBlockEntities;
 import net.thedragonskull.trapsmod.block.entity.renderer.PunjiSticksPlankRenderer;
 import net.thedragonskull.trapsmod.item.ModItems;
+import net.thedragonskull.trapsmod.network.PacketHandler;
+import net.thedragonskull.trapsmod.sound.ModSounds;
 import org.slf4j.Logger;
 
 @Mod(TrapsMod.MOD_ID)
@@ -33,6 +35,7 @@ public class TrapsMod
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
         ModBlockEntities.register(modEventBus);
+        ModSounds.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
@@ -41,6 +44,10 @@ public class TrapsMod
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
+        event.enqueueWork(() -> {
+            event.enqueueWork(PacketHandler::register);
+
+        });
     }
 
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
@@ -56,15 +63,6 @@ public class TrapsMod
         public static void onClientSetup(FMLClientSetupEvent event) {
             event.enqueueWork(() -> {
                 BlockEntityRenderers.register(ModBlockEntities.PUNJI_STICKS_PLANK_BE.get(), PunjiSticksPlankRenderer::new);
-
-                ItemProperties.register(ModBlocks.SHARPENED_BAMBOO.get().asItem(), ResourceLocation.parse("age"), (stack, level, entity, seed) -> {
-                    if (stack.hasTag() && stack.getTag() != null && stack.getTag().contains("BlockStateTag")) {
-                        String ageStr = stack.getTag().getCompound("BlockStateTag").getString("age");
-                        return ageStr.equals("1") ? 1.0F : 0.0F;
-                    }
-                    return 0.0F;
-                });
-
             });
 
         }

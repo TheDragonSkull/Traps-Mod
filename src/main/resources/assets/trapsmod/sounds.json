@@ -1,0 +1,14 @@
+{
+  "creaking_1": {
+    "subtitle": "sounds.trapsmod.creaking_1",
+    "sounds": [
+      "trapsmod:creaking_1"
+    ]
+  },
+  "creaking_2": {
+    "subtitle": "sounds.trapsmod.creaking_2",
+    "sounds": [
+      "trapsmod:creaking_2"
+    ]
+  }
+}

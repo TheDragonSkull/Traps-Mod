@@ -17,6 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.thedragonskull.trapsmod.block.ModBlocks;
 import net.thedragonskull.trapsmod.block.custom.CreakingFloorBlock;
 import net.thedragonskull.trapsmod.block.custom.properties.CustomWoodType;
+import net.thedragonskull.trapsmod.sound.ModSounds;
 
 import java.util.Random;
 
