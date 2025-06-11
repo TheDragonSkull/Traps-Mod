@@ -5,7 +5,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.damagesource.DamageSources;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -46,13 +48,34 @@ public class SharpenedBamboo extends Block {
     }
 
     @Override
-    public void fallOn(Level pLevel, BlockState pState, BlockPos pPos, Entity pEntity, float pFallDistance) {
-        super.fallOn(pLevel, pState, pPos, pEntity, pFallDistance);
+    public void fallOn(Level level, BlockState state, BlockPos pos, Entity entity, float fallDistance) {
+        super.fallOn(level, state, pos, entity, fallDistance);
+
+        if (!level.isClientSide && entity instanceof LivingEntity living) {
+            if (fallDistance >= 3.0f) {
+                int age = state.getValue(AGE);
+                float baseDamage = age == 1 ? 4.0f : 2.0f; // 3 o 2 hearts
+                float extra = (fallDistance - 3.0f) * 1.0f; // +0.5 hearts per extra block
+                float totalDamage = baseDamage + extra;
+
+                living.hurt(level.damageSources().cactus(), totalDamage);
+            }
+        }
     }
 
     @Override
-    public void stepOn(Level pLevel, BlockPos pPos, BlockState pState, Entity pEntity) {
-        super.stepOn(pLevel, pPos, pState, pEntity);
+    public void stepOn(Level level, BlockPos pos, BlockState state, Entity entity) {
+        super.stepOn(level, pos, state, entity);
+
+        if (!level.isClientSide && entity instanceof LivingEntity living) {
+            int age = state.getValue(AGE);
+            int damage = age == 1 ? 2 : 1; // 2 = 1 hearts, 1 = half heart
+
+            // Damage every second (20 ticks)
+            if (living.invulnerableTime <= 0) {
+                living.hurt(level.damageSources().cactus(), damage);
+            }
+        }
     }
 
     @Override
