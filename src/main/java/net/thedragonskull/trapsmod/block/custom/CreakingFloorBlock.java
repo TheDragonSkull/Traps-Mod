@@ -1,5 +1,7 @@
 package net.thedragonskull.trapsmod.block.custom;
 
+import it.unimi.dsi.fastutil.longs.Long2LongMap;
+import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -31,7 +33,9 @@ public class CreakingFloorBlock extends Block {
     public static final EnumProperty<CustomWoodType> WOOD_TYPE = EnumProperty.create("wood_type", CustomWoodType.class);
     public static final IntegerProperty OUTPUT_POWER = BlockStateProperties.POWER;
     public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
-    private static final Map<BlockPos, Long> lastStepSoundTime = new HashMap<>();
+
+    private static final Long2LongMap lastStepSoundTime = new Long2LongOpenHashMap();
+
 
     public CreakingFloorBlock(Properties pProperties) {
         super(pProperties);
@@ -48,7 +52,7 @@ public class CreakingFloorBlock extends Block {
 
     @Override
     public void fallOn(Level level, BlockState state, BlockPos pos, Entity entity, float fallDistance) {
-        if (fallDistance > 0.1f) {
+        if (!level.isClientSide && fallDistance > 0.1f) {
             playCreakingSound(level, pos, entity, true);
         }
         super.fallOn(level, state, pos, entity, fallDistance);
@@ -68,10 +72,11 @@ public class CreakingFloorBlock extends Block {
 
     private void playCreakingSound(Level level, BlockPos pos, Entity entity, boolean forcePlay) {
         long gameTime = level.getGameTime();
-        long lastStepTime = lastStepSoundTime.getOrDefault(pos, 0L);
+        long posKey = pos.asLong();
+        long lastStepTime = lastStepSoundTime.getOrDefault(posKey, 0L);
 
         if (forcePlay || gameTime - lastStepTime > 40) {
-            RandomSource random = RandomSource.create();
+            RandomSource random = level.random;
             float pitch = 0.8f + random.nextFloat() * 0.4f;
             SoundEvent creakSound = random.nextBoolean() ? ModSounds.CREAKING_1.get() : ModSounds.CREAKING_2.get();
 
@@ -85,14 +90,18 @@ public class CreakingFloorBlock extends Block {
                 tryEmitRedstone(level, pos, entity);
             }
 
-
-            lastStepSoundTime.put(pos, gameTime);
-
+            lastStepSoundTime.put(posKey, gameTime);
         }
     }
 
     private void tryEmitRedstone(Level level, BlockPos pos, Entity entity) {
         int power = (entity instanceof ItemEntity) ? 7 : 15;
+
+        BlockState current = level.getBlockState(pos);
+        if (current.getValue(OUTPUT_POWER) != power) {
+            level.setBlock(pos, current.setValue(OUTPUT_POWER, power), 3);
+        }
+
         level.setBlock(pos, level.getBlockState(pos).setValue(OUTPUT_POWER, power), 3);
         level.updateNeighborsAt(pos, this);
         level.scheduleTick(pos, this, 8);
@@ -111,15 +120,9 @@ public class CreakingFloorBlock extends Block {
             boolean hasSignal = level.hasNeighborSignal(pos);
             boolean isCurrentlyPowered = state.getValue(POWERED);
 
-            for (Direction direction : Direction.values()) {
-                BlockPos neighbor = pos.relative(direction);
-                BlockState neighborState = level.getBlockState(neighbor);
-
-                if (level.getSignal(neighbor, direction.getOpposite()) > 0) {
-                    if (neighborState.getBlock() instanceof CreakingFloorBlock) {
-                        return;
-                    }
-                }
+            BlockState neighborState = level.getBlockState(neighborPos);
+            if (neighborState.getBlock() instanceof CreakingFloorBlock) {
+                return; // don't activate if the change comes from another CreakingFloor
             }
 
             if (hasSignal && !isCurrentlyPowered) {
