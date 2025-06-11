@@ -44,7 +44,7 @@ public class ShearsItemMixin {
                     .setValue(BlockStateProperties.HORIZONTAL_FACING, randomFacing);
 
             level.setBlock(pos, sharpened, 3);
-            level.playSound(null, pos, SoundEvents.SHEEP_SHEAR, SoundSource.BLOCKS, 1.0f, 1.0f);
+            level.playSound(null, pos, SoundEvents.BAMBOO_WOOD_FENCE_GATE_OPEN, SoundSource.BLOCKS, 1.0f, 1.0f);
             level.gameEvent(GameEvent.BLOCK_CHANGE, pos, GameEvent.Context.of(player, sharpened));
 
             ItemStack stack = context.getItemInHand();

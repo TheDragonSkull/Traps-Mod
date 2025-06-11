@@ -5,6 +5,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -45,6 +46,21 @@ public class SharpenedBamboo extends Block {
     }
 
     @Override
+    public void fallOn(Level pLevel, BlockState pState, BlockPos pPos, Entity pEntity, float pFallDistance) {
+        super.fallOn(pLevel, pState, pPos, pEntity, pFallDistance);
+    }
+
+    @Override
+    public void stepOn(Level pLevel, BlockPos pPos, BlockState pState, Entity pEntity) {
+        super.stepOn(pLevel, pPos, pState, pEntity);
+    }
+
+    @Override
+    public void entityInside(BlockState pState, Level pLevel, BlockPos pPos, Entity pEntity) {
+        super.entityInside(pState, pLevel, pPos, pEntity);
+    }
+
+    @Override
     public BlockState updateShape(BlockState pState, Direction pDirection, BlockState pNeighborState, LevelAccessor pLevel, BlockPos pPos, BlockPos pNeighborPos) {
 
         if (!pState.canSurvive(pLevel, pPos)) {
@@ -75,13 +91,13 @@ public class SharpenedBamboo extends Block {
             age = below.getValue(BambooStalkBlock.AGE);
         }
 
-        Direction randomFacing = Direction.Plane.HORIZONTAL.getRandomDirection(level.random);
+        long seed = pos.asLong();
+        Direction randomFacing = Direction.Plane.HORIZONTAL.getRandomDirection(RandomSource.create(seed));
 
         return this.defaultBlockState()
                 .setValue(AGE, age)
-                .setValue(FACING, randomFacing); //Todo: posible fallo
+                .setValue(FACING, randomFacing);
     }
-
 
     @Override
     public void tick(BlockState pState, ServerLevel pLevel, BlockPos pPos, RandomSource pRandom) {

@@ -2,6 +2,8 @@ package net.thedragonskull.trapsmod;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
@@ -54,6 +56,15 @@ public class TrapsMod
         public static void onClientSetup(FMLClientSetupEvent event) {
             event.enqueueWork(() -> {
                 BlockEntityRenderers.register(ModBlockEntities.PUNJI_STICKS_PLANK_BE.get(), PunjiSticksPlankRenderer::new);
+
+                ItemProperties.register(ModBlocks.SHARPENED_BAMBOO.get().asItem(), ResourceLocation.parse("age"), (stack, level, entity, seed) -> {
+                    if (stack.hasTag() && stack.getTag() != null && stack.getTag().contains("BlockStateTag")) {
+                        String ageStr = stack.getTag().getCompound("BlockStateTag").getString("age");
+                        return ageStr.equals("1") ? 1.0F : 0.0F;
+                    }
+                    return 0.0F;
+                });
+
             });
 
         }
