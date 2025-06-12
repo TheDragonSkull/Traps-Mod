@@ -14,6 +14,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -21,6 +22,8 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -34,6 +37,8 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.thedragonskull.trapsmod.block.entity.BearTrapBE;
 import net.thedragonskull.trapsmod.sound.ModSounds;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 import static net.thedragonskull.trapsmod.util.BearTrapUtils.*;
 
@@ -64,6 +69,8 @@ public class BearTrap extends BaseEntityBlock {
             BlockEntity be = pLevel.getBlockEntity(pPos);
             if (be instanceof BearTrapBE trapBE) {
                 trapBE.setOwner(player.getUUID());
+                trapBE.setOwnerName(player.getName().getString());
+                trapBE.releaseTrapped();
             }
         }
     }
@@ -87,6 +94,7 @@ public class BearTrap extends BaseEntityBlock {
                 }
 
                 trapSet(level, pos);
+                trapBE.releaseTrapped();
                 return InteractionResult.SUCCESS;
 
             } else {
@@ -101,10 +109,27 @@ public class BearTrap extends BaseEntityBlock {
 
     @Override
     public void entityInside(BlockState pState, Level level, BlockPos pPos, Entity pEntity) { //TODO: si pilla un mob, este no despawnea
-        if (pEntity instanceof LivingEntity living) {
-            if (!level.isClientSide) {
-                if (pState.getValue(TRAP_SET)) {
+        BlockEntity be = level.getBlockEntity(pPos);
+
+        if (!(pEntity instanceof LivingEntity living)) return;
+        if (!(be instanceof BearTrapBE bearTrap)) return;
+
+
+        double xInBlock = pEntity.getX() - pPos.getX();
+        double zInBlock = pEntity.getZ() - pPos.getZ();
+        double centerTolerance = 0.5;
+
+        boolean isCentered = xInBlock > 0.5 - centerTolerance && xInBlock < 0.5 + centerTolerance &&
+                zInBlock > 0.5 - centerTolerance && zInBlock < 0.5 + centerTolerance;
+
+
+
+
+        if (!level.isClientSide) {
+            if (pState.getValue(TRAP_SET)) {
+                if (isCentered && bearTrap.trappedEntityId == null) {
                     trapSnap(level, pPos);
+                    bearTrap.trapEntity(living);
 
                     if (living instanceof Player player) {
                         ItemStack leggings = player.getItemBySlot(EquipmentSlot.LEGS);
@@ -116,13 +141,25 @@ public class BearTrap extends BaseEntityBlock {
                     } else {
                         living.hurt(level.damageSources().cactus(), 6);
                     }
+
+                } else {
+
+                    // Damage every second (20 ticks)
+                    if (living.invulnerableTime <= 0) {
+                        living.hurt(level.damageSources().cactus(), 1);
+                    }
                 }
-
             }
-
-            pEntity.makeStuckInBlock(pState, new Vec3(0.0D, 0.05D, 0.0D)); //TODO: mover el entity mas al centro? // solo mover en y-
         }
     }
+
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        return !level.isClientSide ? (lvl, pos, st, be) -> {
+            if (be instanceof BearTrapBE trapBE) trapBE.tick();
+        } : null;
+    }
+
 
     @Override
     public void tick(BlockState pState, ServerLevel pLevel, BlockPos pPos, RandomSource pRandom) {

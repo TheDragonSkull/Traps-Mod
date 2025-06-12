@@ -5,8 +5,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+import net.thedragonskull.trapsmod.block.custom.BearTrap;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
@@ -27,6 +32,9 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
     private String bearTrapLastAnimation = null;
 
     private UUID owner = null;
+    private String ownerName = "Unknown";
+
+    public UUID trappedEntityId = null;
 
     public BearTrapBE(BlockPos pPos, BlockState pBlockState) {
         super(ModBlockEntities.BEAR_TRAP_BE.get(), pPos, pBlockState);
@@ -68,6 +76,57 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
         return this.owner;
     }
 
+    public void setOwnerName(String name) {
+        this.ownerName = name;
+    }
+
+    public String getOwnerName() {
+        return ownerName;
+    }
+
+    public void trapEntity(LivingEntity entity) {
+        this.trappedEntityId = entity.getUUID();
+    }
+
+    public void releaseTrapped() {
+        this.trappedEntityId = null;
+    }
+
+    public boolean isEntityTrapped(LivingEntity entity) {
+        return trappedEntityId != null && trappedEntityId.equals(entity.getUUID());
+    }
+
+    public void tick() {
+        if (trappedEntityId == null || level == null || level.isClientSide) return;
+        Entity entity = ((ServerLevel) level).getEntity(trappedEntityId);
+
+        if (!this.getBlockState().getValue(BearTrap.TRAP_SET)) {
+
+            // If player does not exist of dies
+            if (!(entity instanceof LivingEntity living) || !living.isAlive()) {
+                releaseTrapped();
+                return;
+            }
+
+            // Stop movement and tp
+            Vec3 velocity = living.getDeltaMovement();
+            double yMotion = velocity.y < 0 ? velocity.y : 0.0;
+            living.setDeltaMovement(0.0, yMotion, 0.0);
+
+            double centerX = worldPosition.getX() + 0.5;
+            double centerY = worldPosition.getY() + 0.01;
+            double centerZ = worldPosition.getZ() + 0.5;
+            living.teleportTo(centerX, centerY, centerZ);
+            living.makeStuckInBlock(this.getBlockState(), new Vec3(0.0D, 0.01D, 0.0D));
+            living.hurtMarked = true;
+
+        } else {
+            releaseTrapped();
+        }
+    }
+
+
+
     @Override
     public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
@@ -77,6 +136,8 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
         }
 
         if (owner != null) tag.putUUID("owner", owner);
+
+        tag.putString("ownerName", ownerName);
     }
 
     @Override
@@ -88,6 +149,8 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
         }
 
         if (tag.hasUUID("owner")) owner = tag.getUUID("owner");
+
+        if (tag.contains("ownerName")) ownerName = tag.getString("ownerName");
     }
 
     @Nullable
