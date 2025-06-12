@@ -77,6 +77,24 @@ public class BearTrap extends BaseEntityBlock {
     }
 
     @Override
+    public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pMovedByPiston) {
+
+        if (pState.getBlock() == pNewState.getBlock()) {
+            super.onRemove(pState, pLevel, pPos, pNewState, pMovedByPiston);
+            return;
+        }
+
+        BlockEntity be = pLevel.getBlockEntity(pPos);
+
+        if (be instanceof BearTrapBE trapBE) {
+            trapBE.ignoreEntity(trapBE.trappedEntityId, 40);
+            trapBE.releaseTrapped();
+        }
+
+        super.onRemove(pState, pLevel, pPos, pNewState, pMovedByPiston);
+    }
+
+    @Override
     public InteractionResult use(BlockState pState, Level level, BlockPos pos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
         if (level.isClientSide) return InteractionResult.SUCCESS;
 
@@ -124,9 +142,6 @@ public class BearTrap extends BaseEntityBlock {
 
         boolean isCentered = xInBlock > 0.5 - centerTolerance && xInBlock < 0.5 + centerTolerance &&
                 zInBlock > 0.5 - centerTolerance && zInBlock < 0.5 + centerTolerance;
-
-
-
 
         if (!level.isClientSide) {
             if (pState.getValue(TRAP_SET)) {
