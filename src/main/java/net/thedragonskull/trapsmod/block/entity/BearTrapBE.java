@@ -8,6 +8,7 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -36,8 +37,44 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
 
     public UUID trappedEntityId = null;
 
+    public UUID ignoredEntity = null;
+    private int ignoreTicks = 0;
+
     public BearTrapBE(BlockPos pPos, BlockState pBlockState) {
         super(ModBlockEntities.BEAR_TRAP_BE.get(), pPos, pBlockState);
+    }
+
+    public void tick() {
+
+        if (ignoreTicks > 0) ignoreTicks--;
+        if (ignoreTicks <= 0) ignoredEntity = null;
+
+        if (trappedEntityId == null || level == null || level.isClientSide) return;
+        Entity entity = ((ServerLevel) level).getEntity(trappedEntityId);
+
+        if (!this.getBlockState().getValue(BearTrap.TRAP_SET)) {
+
+            // If player does not exist of dies
+            if (!(entity instanceof LivingEntity living) || !living.isAlive()) {
+                releaseTrapped();
+                return;
+            }
+
+            // Stop movement and tp
+            Vec3 velocity = living.getDeltaMovement();
+            double yMotion = velocity.y < 0 ? velocity.y : 0.0;
+            living.setDeltaMovement(0.0, yMotion, 0.0);
+
+            double centerX = worldPosition.getX() + 0.5;
+            double centerY = worldPosition.getY() + 0.01;
+            double centerZ = worldPosition.getZ() + 0.5;
+            living.teleportTo(centerX, centerY, centerZ);
+            living.makeStuckInBlock(this.getBlockState(), new Vec3(0.0D, 0.01D, 0.0D));
+            living.hurtMarked = true;
+
+        } else {
+            releaseTrapped();
+        }
     }
 
     @Override
@@ -89,43 +126,24 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
     }
 
     public void releaseTrapped() {
+        if (trappedEntityId != null && level instanceof ServerLevel serverLevel) {
+            Entity entity = serverLevel.getEntity(trappedEntityId);
+            if (entity instanceof Mob mob) {
+                CompoundTag tag = new CompoundTag();
+                mob.saveWithoutId(tag);
+                tag.remove("PersistenceRequired");
+                mob.load(tag);
+            }
+        }
+
         this.trappedEntityId = null;
     }
 
-    public boolean isEntityTrapped(LivingEntity entity) {
-        return trappedEntityId != null && trappedEntityId.equals(entity.getUUID());
+
+    public void ignoreEntity(UUID uuid, int ticks) {
+        this.ignoredEntity = uuid;
+        this.ignoreTicks = ticks;
     }
-
-    public void tick() {
-        if (trappedEntityId == null || level == null || level.isClientSide) return;
-        Entity entity = ((ServerLevel) level).getEntity(trappedEntityId);
-
-        if (!this.getBlockState().getValue(BearTrap.TRAP_SET)) {
-
-            // If player does not exist of dies
-            if (!(entity instanceof LivingEntity living) || !living.isAlive()) {
-                releaseTrapped();
-                return;
-            }
-
-            // Stop movement and tp
-            Vec3 velocity = living.getDeltaMovement();
-            double yMotion = velocity.y < 0 ? velocity.y : 0.0;
-            living.setDeltaMovement(0.0, yMotion, 0.0);
-
-            double centerX = worldPosition.getX() + 0.5;
-            double centerY = worldPosition.getY() + 0.01;
-            double centerZ = worldPosition.getZ() + 0.5;
-            living.teleportTo(centerX, centerY, centerZ);
-            living.makeStuckInBlock(this.getBlockState(), new Vec3(0.0D, 0.01D, 0.0D));
-            living.hurtMarked = true;
-
-        } else {
-            releaseTrapped();
-        }
-    }
-
-
 
     @Override
     public void saveAdditional(CompoundTag tag) {

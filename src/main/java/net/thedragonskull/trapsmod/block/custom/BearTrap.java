@@ -12,6 +12,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -94,7 +95,9 @@ public class BearTrap extends BaseEntityBlock {
                 }
 
                 trapSet(level, pos);
+                trapBE.ignoreEntity(trapBE.trappedEntityId, 40);
                 trapBE.releaseTrapped();
+
                 return InteractionResult.SUCCESS;
 
             } else {
@@ -127,9 +130,14 @@ public class BearTrap extends BaseEntityBlock {
 
         if (!level.isClientSide) {
             if (pState.getValue(TRAP_SET)) {
-                if (isCentered && bearTrap.trappedEntityId == null) {
+                if (isCentered && bearTrap.trappedEntityId == null &&
+                        (bearTrap.ignoredEntity == null || !bearTrap.ignoredEntity.equals(living.getUUID()))) {
                     trapSnap(level, pPos);
                     bearTrap.trapEntity(living);
+
+                    if (living instanceof Mob mob) {
+                        mob.setPersistenceRequired();
+                    }
 
                     if (living instanceof Player player) {
                         ItemStack leggings = player.getItemBySlot(EquipmentSlot.LEGS);
