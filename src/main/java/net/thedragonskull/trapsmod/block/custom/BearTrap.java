@@ -1,7 +1,9 @@
 package net.thedragonskull.trapsmod.block.custom;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
@@ -26,13 +28,14 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.thedragonskull.trapsmod.block.entity.BearTrapBE;
 import net.thedragonskull.trapsmod.sound.ModSounds;
 import org.jetbrains.annotations.Nullable;
 
-import static net.thedragonskull.trapsmod.util.BearTrapUtils.rotateShapeFrom;
+import static net.thedragonskull.trapsmod.util.BearTrapUtils.*;
 
 public class BearTrap extends BaseEntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
@@ -56,66 +59,69 @@ public class BearTrap extends BaseEntityBlock {
     }
 
     @Override
+    public void setPlacedBy(Level pLevel, BlockPos pPos, BlockState pState, @Nullable LivingEntity pPlacer, ItemStack pStack) {
+        if (!pLevel.isClientSide && pPlacer instanceof Player player) {
+            BlockEntity be = pLevel.getBlockEntity(pPos);
+            if (be instanceof BearTrapBE trapBE) {
+                trapBE.setOwner(player.getUUID());
+            }
+        }
+    }
+
+    @Override
     public InteractionResult use(BlockState pState, Level level, BlockPos pos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
         if (level.isClientSide) return InteractionResult.SUCCESS;
 
         BlockEntity be = level.getBlockEntity(pos);
-        BlockState trapState = level.getBlockState(pos);
+        if (!(be instanceof BearTrapBE trapBE)) return InteractionResult.PASS;
 
-        if (be instanceof BearTrapBE bearTrap) {
+        boolean isOwner = trapBE.getOwner() != null && trapBE.getOwner().equals(pPlayer.getUUID());
 
-            if (pPlayer.isShiftKeyDown() && pPlayer.getMainHandItem().isEmpty()) {
-                if (!trapState.getValue(TRAP_SET)) {
-                    bearTrap.setAndTrigger("bear_trap_open");
-                    level.setBlock(pos, trapState.setValue(TRAP_SET, true), 3);
+        if (pPlayer.isShiftKeyDown() && pPlayer.getMainHandItem().isEmpty()) {
+            if (!pState.getValue(TRAP_SET)) {
 
-                    level.playSound(null, pos, ModSounds.BEAR_TRAP_OPEN.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
-                } else {
-                    trapSnap(level, pos);
+                if (!isOwner) {
+                    pPlayer.displayClientMessage(Component.literal("Only the owner of the trap can disarm it.")
+                            .withStyle(ChatFormatting.DARK_RED), true);
+                    return InteractionResult.FAIL;
                 }
 
+                trapSet(level, pos);
+                return InteractionResult.SUCCESS;
+
+            } else {
+
+                trapSnap(level, pos);
                 return InteractionResult.SUCCESS;
             }
         }
-
 
         return InteractionResult.PASS;
     }
 
     @Override
-    public void entityInside(BlockState pState, Level level, BlockPos pPos, Entity pEntity) {
-        if (!level.isClientSide && pEntity instanceof LivingEntity living) {
+    public void entityInside(BlockState pState, Level level, BlockPos pPos, Entity pEntity) { //TODO: si pilla un mob, este no despawnea
+        if (pEntity instanceof LivingEntity living) {
+            if (!level.isClientSide) {
+                if (pState.getValue(TRAP_SET)) {
+                    trapSnap(level, pPos);
 
-            if (pState.getValue(TRAP_SET)) {
-                trapSnap(level, pPos);
+                    if (living instanceof Player player) {
+                        ItemStack leggings = player.getItemBySlot(EquipmentSlot.LEGS);
+                        boolean hasLeggings = !leggings.isEmpty();
 
-                if (living instanceof Player player) {
-                    ItemStack leggings = player.getItemBySlot(EquipmentSlot.LEGS);
-                    boolean hasLeggings = !leggings.isEmpty();
+                        float damage = hasLeggings ? 4.0f : 6.0f;
+                        living.hurt(level.damageSources().cactus(), damage);
 
-                    float damage = hasLeggings ? 4.0f : 6.0f;
-                    living.hurt(level.damageSources().cactus(), damage);
-
-                } else {
-                    living.hurt(level.damageSources().cactus(), 6);
+                    } else {
+                        living.hurt(level.damageSources().cactus(), 6);
+                    }
                 }
 
             }
 
+            pEntity.makeStuckInBlock(pState, new Vec3(0.0D, 0.05D, 0.0D)); //TODO: mover el entity mas al centro? // solo mover en y-
         }
-    }
-
-    private static void trapSnap(Level level, BlockPos pos) {
-        BlockEntity be = level.getBlockEntity(pos);
-        BlockState trapState = level.getBlockState(pos);
-
-        if (be instanceof BearTrapBE bearTrap) {
-            bearTrap.setAndTrigger("bear_trap_snap");
-            level.setBlock(pos, trapState.setValue(TRAP_SET, false), 3);
-
-            level.playSound(null, pos, ModSounds.BEAR_TRAP_SNAP.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
-        }
-
     }
 
     @Override

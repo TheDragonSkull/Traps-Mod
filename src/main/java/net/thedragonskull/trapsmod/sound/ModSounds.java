@@ -25,7 +25,7 @@ public class ModSounds {
     public static final RegistryObject<SoundEvent> BEAR_TRAP_SNAP =
             registerSoundEvents("bear_trap_snap");
 
-    public static final RegistryObject<SoundEvent> BEAR_TRAP_OPEN =
+    public static final RegistryObject<SoundEvent> BEAR_TRAP_SET =
             registerSoundEvents("bear_trap_open");
 
     public static void register(IEventBus eventBus) {

@@ -17,6 +17,7 @@ import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import javax.annotation.Nullable;
+import java.util.UUID;
 
 public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
     private AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -24,6 +25,8 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
     public static final RawAnimation SNAP = RawAnimation.begin().thenPlayAndHold("animation.bear_trap.snap");
     public static final RawAnimation OPEN = RawAnimation.begin().thenPlayAndHold("animation.bear_trap.open");
     private String bearTrapLastAnimation = null;
+
+    private UUID owner = null;
 
     public BearTrapBE(BlockPos pPos, BlockState pBlockState) {
         super(ModBlockEntities.BEAR_TRAP_BE.get(), pPos, pBlockState);
@@ -57,20 +60,34 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
         }
     }
 
+    public void setOwner(UUID uuid) {
+        this.owner = uuid;
+    }
+
+    public UUID getOwner() {
+        return this.owner;
+    }
+
     @Override
     public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
+
         if (bearTrapLastAnimation != null) {
             tag.putString("trap_last_animation", bearTrapLastAnimation);
         }
+
+        if (owner != null) tag.putUUID("owner", owner);
     }
 
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
+
         if (tag.contains("trap_last_animation")) {
             bearTrapLastAnimation = tag.getString("trap_last_animation");
         }
+
+        if (tag.hasUUID("owner")) owner = tag.getUUID("owner");
     }
 
     @Nullable

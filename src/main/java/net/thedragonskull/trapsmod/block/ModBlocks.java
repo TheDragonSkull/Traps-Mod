@@ -46,7 +46,7 @@ public class ModBlocks {
 
     public static final RegistryObject<Block> BEAR_TRAP = registerBlock("bear_trap",
             () -> new BearTrap(BlockBehaviour.Properties.of().mapColor(MapColor.TERRACOTTA_CYAN)
-                    .requiresCorrectToolForDrops().strength(5.0F, 6.0F).sound(SoundType.ANVIL).noOcclusion()));
+                    .requiresCorrectToolForDrops().strength(5.0F, 6.0F).sound(SoundType.ANVIL).noOcclusion()));//todo destroy time alto
 
 
     private static boolean never(BlockState p_50806_, BlockGetter p_50807_, BlockPos p_50808_) {
