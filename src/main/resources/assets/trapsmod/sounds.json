@@ -10,5 +10,17 @@
     "sounds": [
       "trapsmod:creaking_2"
     ]
+  },
+  "bear_trap_snap": {
+    "subtitle": "sounds.trapsmod.bear_trap_snap",
+    "sounds": [
+      "trapsmod:bear_trap_snap"
+    ]
+  },
+  "bear_trap_open": {
+    "subtitle": "sounds.trapsmod.bear_trap_open",
+    "sounds": [
+      "trapsmod:bear_trap_open"
+    ]
   }
 }

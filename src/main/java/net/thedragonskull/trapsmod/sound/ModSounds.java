@@ -22,6 +22,12 @@ public class ModSounds {
     public static final RegistryObject<SoundEvent> CREAKING_2 =
             registerSoundEvents("creaking_2");
 
+    public static final RegistryObject<SoundEvent> BEAR_TRAP_SNAP =
+            registerSoundEvents("bear_trap_snap");
+
+    public static final RegistryObject<SoundEvent> BEAR_TRAP_OPEN =
+            registerSoundEvents("bear_trap_open");
+
     public static void register(IEventBus eventBus) {
         SOUND_EVENTS.register(eventBus);
     }
