@@ -1,5 +1,6 @@
 package net.thedragonskull.trapsmod.block.entity.model;
 
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.thedragonskull.trapsmod.TrapsMod;
 import net.thedragonskull.trapsmod.block.entity.BearTrapBE;
@@ -22,4 +23,8 @@ public class BearTrapModel extends GeoModel<BearTrapBE> {
         return ResourceLocation.fromNamespaceAndPath(TrapsMod.MOD_ID, "animations/bear_trap.animation.json");
     }
 
+    @Override
+    public RenderType getRenderType(BearTrapBE animatable, ResourceLocation texture) {
+        return RenderType.entityCutoutNoCullZOffset(ResourceLocation.fromNamespaceAndPath(TrapsMod.MOD_ID,"textures/block/bear_trap.png"));
+    }
 }
