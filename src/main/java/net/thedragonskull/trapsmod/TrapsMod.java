@@ -2,8 +2,6 @@ package net.thedragonskull.trapsmod;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
-import net.minecraft.client.renderer.item.ItemProperties;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
@@ -21,6 +19,7 @@ import net.thedragonskull.trapsmod.block.entity.renderer.PunjiSticksPlankRendere
 import net.thedragonskull.trapsmod.item.ModItems;
 import net.thedragonskull.trapsmod.network.PacketHandler;
 import net.thedragonskull.trapsmod.sound.ModSounds;
+import net.thedragonskull.trapsmod.trap_variants.ModBearTrapVariants;
 import org.slf4j.Logger;
 
 @Mod(TrapsMod.MOD_ID)
@@ -47,7 +46,7 @@ public class TrapsMod
     private void commonSetup(final FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
             event.enqueueWork(PacketHandler::register);
-
+            event.enqueueWork(ModBearTrapVariants::registerVariant);
         });
     }
 

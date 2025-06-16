@@ -28,6 +28,7 @@ import net.minecraftforge.items.ItemStackHandler;
 import net.thedragonskull.trapsmod.block.custom.BearTrap;
 import net.thedragonskull.trapsmod.block.entity.BearTrapBE;
 import net.thedragonskull.trapsmod.sound.ModSounds;
+import net.thedragonskull.trapsmod.trap_variants.BearTrapVariantRegistry;
 
 import javax.annotation.Nullable;
 import java.util.Random;
@@ -68,76 +69,7 @@ public class BearTrapUtils {
             ItemStack trapItem = bearTrap.getTrapItem();
 
             if (!trapItem.isEmpty()) {
-                if (trapItem.is(Blocks.TNT.asItem())) {
-                    Vec3 explosionPos = Vec3.atCenterOf(pos);
-                    level.explode(
-                            null,
-                            level.damageSources().explosion(null),
-                            null,
-                            explosionPos,
-                            1.2F,
-                            false,
-                            Level.ExplosionInteraction.BLOCK
-                    );
-
-                    bearTrap.getItemHandler().extractItem(0, 1, false);
-                    level.destroyBlock(pos, false);
-
-                } else if (trapItem.is(Items.FIREWORK_ROCKET)) {
-                    ItemStack firework = trapItem.copy();
-                    Vec3 center = Vec3.atCenterOf(pos);
-
-                    FireworkRocketEntity fireworkEntity = new FireworkRocketEntity(
-                            level,
-                            firework,
-                            center.x, center.y + 0.2, center.z,
-                            false
-                    );
-
-                    level.addFreshEntity(fireworkEntity);
-
-                } else if (trapItem.is(Items.FIRE_CHARGE)) {
-                    BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
-                    RandomSource random = level.getRandom();
-
-                    // 5x5 area
-                    for (int dx = -2; dx <= 2; dx++) {
-                        for (int dz = -2; dz <= 2; dz++) {
-                            if (random.nextFloat() < 0.5f) continue;
-
-                            mutablePos.set(pos.getX() + dx, pos.getY(), pos.getZ() + dz);
-                            BlockState targetState = level.getBlockState(mutablePos);
-
-                            if (targetState.isAir() && Blocks.FIRE.defaultBlockState().canSurvive(level, mutablePos)) {
-                                level.setBlock(mutablePos, Blocks.FIRE.defaultBlockState(), 11);
-                            }
-                        }
-                    }
-
-                    if (trappedEntity != null) {
-                        trappedEntity.setSecondsOnFire(5);
-                    }
-
-                    level.playSound(null, pos, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 1.0F, 1.0F);
-                } else if (trapItem.is(Blocks.REDSTONE_BLOCK.asItem())) {
-                    int signal;
-                    if (trappedEntity != null) {
-                        bearTrap.trapEntity(trappedEntity);
-
-                        if (trappedEntity instanceof Player) {
-                            signal = 15;
-                        } else {
-                            signal = 10;
-                        }
-                    } else {
-                        signal = 5;
-                    }
-
-                    bearTrap.setRedstoneSignal(signal);
-                    level.updateNeighborsAt(pos, level.getBlockState(pos).getBlock());
-                }
-
-
+                BearTrapVariantRegistry.triggerVariant(trapItem.getItem(), level, pos, trappedEntity);
                 bearTrap.getItemHandler().extractItem(0, 1, false);
             }
 
