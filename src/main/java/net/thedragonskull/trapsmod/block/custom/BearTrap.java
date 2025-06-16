@@ -5,7 +5,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -13,6 +15,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -34,9 +37,11 @@ import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.thedragonskull.trapsmod.block.entity.BearTrapBE;
 import net.thedragonskull.trapsmod.sound.ModSounds;
+import net.thedragonskull.trapsmod.util.ModTags;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -46,6 +51,7 @@ import static net.thedragonskull.trapsmod.util.BearTrapUtils.*;
 public class BearTrap extends BaseEntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty TRAP_SET = BooleanProperty.create("trap_set");
+    public static final BooleanProperty BURIED = BooleanProperty.create("buried");
 
     protected static final VoxelShape SET_SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 5.0D, 16.0D);
     protected static final VoxelShape CLOSED_SHAPE = Block.box(4.0D, 0.0D, 0.0D, 12.0D, 9.0D, 16.0D);
@@ -56,12 +62,13 @@ public class BearTrap extends BaseEntityBlock {
         this.registerDefaultState(
                 this.stateDefinition.any()
                         .setValue(FACING, Direction.NORTH)
-                        .setValue(TRAP_SET, false));
+                        .setValue(TRAP_SET, false)
+                        .setValue(BURIED, false));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> pBuilder) {
-        pBuilder.add(FACING, TRAP_SET);
+        pBuilder.add(FACING, TRAP_SET, BURIED);
     }
 
     @Override
@@ -103,7 +110,7 @@ public class BearTrap extends BaseEntityBlock {
 
         boolean isOwner = trapBE.getOwner() != null && trapBE.getOwner().equals(pPlayer.getUUID());
 
-        if (pPlayer.isShiftKeyDown() && pPlayer.getMainHandItem().isEmpty()) {
+        if (pPlayer.isShiftKeyDown() && pPlayer.getMainHandItem().isEmpty() && !pState.getValue(BURIED)) {
             if (!pState.getValue(TRAP_SET)) {
 
                 if (!isOwner) {
@@ -123,18 +130,33 @@ public class BearTrap extends BaseEntityBlock {
                 trapSnap(level, pos);
                 return InteractionResult.SUCCESS;
             }
+        } else if (pPlayer.getMainHandItem().is(ItemTags.SHOVELS)) {
+            boolean isBuried = pState.getValue(BearTrap.BURIED);
+
+            if (!pState.getValue(TRAP_SET)) return InteractionResult.FAIL;
+
+            if (!isBuried) {
+                // Bury if correct block below
+                if (!level.getBlockState(pos.below()).is(ModTags.Blocks.BURYABLE_ON)) return InteractionResult.FAIL;
+
+                level.setBlock(pos, pState.setValue(BearTrap.BURIED, true), 3);
+                level.playSound(null, pos, SoundEvents.BRUSH_SAND, SoundSource.BLOCKS, 1.0F, 1.0F); //todo: durability
+                return InteractionResult.SUCCESS;
+            } else {
+                // Unbury
+                level.setBlock(pos, pState.setValue(BearTrap.BURIED, false), 3);
+                level.playSound(null, pos, SoundEvents.GRAVEL_BREAK, SoundSource.BLOCKS, 1.0F, 1.0F); //todo: durability
+                return InteractionResult.SUCCESS;
+            }
+
         }
 
         return InteractionResult.PASS;
     }
 
     @Override
-    public void entityInside(BlockState pState, Level level, BlockPos pPos, Entity pEntity) { //TODO: si pilla un mob, este no despawnea
-        BlockEntity be = level.getBlockEntity(pPos);
-
-        if (!(pEntity instanceof LivingEntity living)) return;
-        if (!(be instanceof BearTrapBE bearTrap)) return;
-
+    public void entityInside(BlockState pState, Level level, BlockPos pPos, Entity pEntity) {
+        if (!(level.getBlockEntity(pPos) instanceof BearTrapBE bearTrap)) return;
 
         double xInBlock = pEntity.getX() - pPos.getX();
         double zInBlock = pEntity.getZ() - pPos.getZ();
@@ -143,10 +165,13 @@ public class BearTrap extends BaseEntityBlock {
         boolean isCentered = xInBlock > 0.5 - centerTolerance && xInBlock < 0.5 + centerTolerance &&
                 zInBlock > 0.5 - centerTolerance && zInBlock < 0.5 + centerTolerance;
 
-        if (!level.isClientSide) {
-            if (pState.getValue(TRAP_SET)) {
-                if (isCentered && bearTrap.trappedEntityId == null &&
+        if (!level.isClientSide && pState.getValue(BearTrap.TRAP_SET) && isCentered) {
+
+            // 🧍 Si es entidad viva
+            if (pEntity instanceof LivingEntity living) {
+                if (bearTrap.trappedEntityId == null &&
                         (bearTrap.ignoredEntity == null || !bearTrap.ignoredEntity.equals(living.getUUID()))) {
+
                     trapSnap(level, pPos);
                     bearTrap.trapEntity(living);
 
@@ -156,25 +181,29 @@ public class BearTrap extends BaseEntityBlock {
 
                     if (living instanceof Player player) {
                         ItemStack leggings = player.getItemBySlot(EquipmentSlot.LEGS);
-                        boolean hasLeggings = !leggings.isEmpty();
-
-                        float damage = hasLeggings ? 4.0f : 6.0f;
+                        float damage = leggings.isEmpty() ? 6.0f : 4.0f;
                         living.hurt(level.damageSources().cactus(), damage);
-
                     } else {
                         living.hurt(level.damageSources().cactus(), 6);
                     }
-
                 } else {
-
-                    // Damage every second (20 ticks)
+                    // Tick de daño si ya está dentro
                     if (living.invulnerableTime <= 0) {
                         living.hurt(level.damageSources().cactus(), 1);
                     }
                 }
             }
+
+            // 📦 Si es un item dropeado
+            else if (pEntity instanceof ItemEntity) {
+                trapSnap(level, pPos); // activa trampa sin atrapar a nadie
+                // Puedes destruir el item si quieres: ((ItemEntity)pEntity).discard();
+            }
+
+            // 💥 Aquí podrías añadir más tipos si lo deseas (ej: XP orbs, projectiles)
         }
     }
+
 
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
@@ -225,7 +254,7 @@ public class BearTrap extends BaseEntityBlock {
 
     @Override
     public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return COLLISION_SHAPE;
+        return state.getValue(BURIED) ? Shapes.empty() : COLLISION_SHAPE;
     }
 
     @Override
