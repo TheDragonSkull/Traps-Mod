@@ -143,7 +143,7 @@ public class BearTrap extends BaseEntityBlock {
 
             } else {
 
-                trapSnap(level, pos);
+                trapSnap(level, pos, null);
                 return InteractionResult.SUCCESS;
             }
         } else if (pPlayer.getMainHandItem().is(ItemTags.SHOVELS)) {
@@ -186,26 +186,27 @@ public class BearTrap extends BaseEntityBlock {
         boolean isCentered = xInBlock > 0.5 - centerTolerance && xInBlock < 0.5 + centerTolerance &&
                 zInBlock > 0.5 - centerTolerance && zInBlock < 0.5 + centerTolerance;
 
-        if (!level.isClientSide && pState.getValue(BearTrap.TRAP_SET) && isCentered) {
+        if (!level.isClientSide && pState.getValue(BearTrap.TRAP_SET)) {
 
             // 🧍 Si es entidad viva
             if (pEntity instanceof LivingEntity living) {
-                if (bearTrap.trappedEntityId == null &&
-                        (bearTrap.ignoredEntity == null || !bearTrap.ignoredEntity.equals(living.getUUID()))) {
+                if (isCentered) {
+                    if (bearTrap.trappedEntityId == null &&
+                            (bearTrap.ignoredEntity == null || !bearTrap.ignoredEntity.equals(living.getUUID()))) {
 
-                    trapSnap(level, pPos);
-                    bearTrap.trapEntity(living);
+                        trapSnap(level, pPos, living);
 
-                    if (living instanceof Mob mob) {
-                        mob.setPersistenceRequired();
-                    }
+                        if (living instanceof Mob mob) {
+                            mob.setPersistenceRequired();
+                        }
 
-                    if (living instanceof Player player) {
-                        ItemStack leggings = player.getItemBySlot(EquipmentSlot.LEGS);
-                        float damage = leggings.isEmpty() ? 6.0f : 4.0f;
-                        living.hurt(level.damageSources().cactus(), damage);
-                    } else {
-                        living.hurt(level.damageSources().cactus(), 6);
+                        if (living instanceof Player player) {
+                            ItemStack leggings = player.getItemBySlot(EquipmentSlot.LEGS);
+                            float damage = leggings.isEmpty() ? 6.0f : 4.0f;
+                            living.hurt(level.damageSources().cactus(), damage);
+                        } else {
+                            living.hurt(level.damageSources().cactus(), 6);
+                        }
                     }
                 } else {
                     // Tick de daño si ya está dentro
@@ -215,13 +216,9 @@ public class BearTrap extends BaseEntityBlock {
                 }
             }
 
-            // 📦 Si es un item dropeado
             else if (pEntity instanceof ItemEntity) {
-                trapSnap(level, pPos); // activa trampa sin atrapar a nadie
-                // Puedes destruir el item si quieres: ((ItemEntity)pEntity).discard();
+                trapSnap(level, pPos, null);
             }
-
-            // 💥 Aquí podrías añadir más tipos si lo deseas (ej: XP orbs, projectiles)
         }
     }
 
