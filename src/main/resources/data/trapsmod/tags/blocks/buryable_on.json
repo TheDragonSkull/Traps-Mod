@@ -2,7 +2,10 @@
   "values": [
     "#minecraft:sand",
     "#minecraft:dirt",
+    "#minecraft:nylium",
+    "#minecraft:soul_fire_base_blocks",
     "minecraft:gravel",
-    "minecraft:suspicious_gravel"
+    "minecraft:suspicious_gravel",
+    "minecraft:snow_block"
   ]
 }

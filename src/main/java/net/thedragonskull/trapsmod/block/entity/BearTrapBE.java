@@ -6,6 +6,7 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -30,6 +31,9 @@ import java.util.UUID;
 public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
     private AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
+    private int ticksSinceLoad = 0;
+    private int redstoneSignal = 0;
+
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
         @Override
         protected void onContentsChanged(int slot) {
@@ -47,7 +51,7 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
     private UUID owner = null;
     private String ownerName = "Unknown";
 
-    public UUID trappedEntityId = null;
+    public UUID trappedEntityId;
 
     public UUID ignoredEntity = null;
     private int ignoreTicks = 0;
@@ -57,16 +61,22 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
     }
 
     public void tick() {
+        if (level == null || level.isClientSide) return;
+
+        ticksSinceLoad++;
 
         if (ignoreTicks > 0) ignoreTicks--;
         if (ignoreTicks <= 0) ignoredEntity = null;
 
-        if (trappedEntityId == null || level == null || level.isClientSide) return;
+        if (trappedEntityId == null) return;
+
         Entity entity = ((ServerLevel) level).getEntity(trappedEntityId);
+
+        // Wait for the player to load
+        if (ticksSinceLoad < 20 && (entity == null || entity instanceof ServerPlayer)) return;
 
         if (!this.getBlockState().getValue(BearTrap.TRAP_SET)) {
 
-            // If player does not exist of dies
             if (!(entity instanceof LivingEntity living) || !living.isAlive()) {
                 releaseTrapped();
                 return;
@@ -135,6 +145,8 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
 
     public void trapEntity(LivingEntity entity) {
         this.trappedEntityId = entity.getUUID();
+        this.ignoreTicks = 40;
+        setChanged();
     }
 
     public void releaseTrapped() {
@@ -165,6 +177,15 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
         return itemHandler.getStackInSlot(0);
     }
 
+    public int getRedstoneSignal() {
+        return redstoneSignal;
+    }
+
+    public void setRedstoneSignal(int signal) {
+        this.redstoneSignal = signal;
+        setChanged();
+    }
+
     @Override
     public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
@@ -173,26 +194,42 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
             tag.putString("trap_last_animation", bearTrapLastAnimation);
         }
 
+        if (trappedEntityId != null) {
+            tag.putUUID("TrappedEntity", trappedEntityId);
+        }
+
+        tag.putInt("IgnoreTicks", ignoreTicks);
+
         if (owner != null) tag.putUUID("owner", owner);
 
         tag.putString("ownerName", ownerName);
 
         tag.put("trapItem", itemHandler.serializeNBT());
+
+        tag.putInt("RedstoneSignal", redstoneSignal);
     }
 
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
 
+        if (tag.hasUUID("TrappedEntity")) {
+            this.trappedEntityId = tag.getUUID("TrappedEntity");
+        }
+
         if (tag.contains("trap_last_animation")) {
             bearTrapLastAnimation = tag.getString("trap_last_animation");
         }
+
+        ignoreTicks = tag.getInt("IgnoreTicks");
 
         if (tag.hasUUID("owner")) owner = tag.getUUID("owner");
 
         if (tag.contains("ownerName")) ownerName = tag.getString("ownerName");
 
         itemHandler.deserializeNBT(tag.getCompound("trapItem"));
+
+        redstoneSignal = tag.getInt("RedstoneSignal");
     }
 
     @Nullable

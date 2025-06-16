@@ -2,6 +2,7 @@ package net.thedragonskull.trapsmod.util;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
@@ -118,6 +119,22 @@ public class BearTrapUtils {
                     }
 
                     level.playSound(null, pos, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 1.0F, 1.0F);
+                } else if (trapItem.is(Blocks.REDSTONE_BLOCK.asItem())) {
+                    int signal;
+                    if (trappedEntity != null) {
+                        bearTrap.trapEntity(trappedEntity);
+
+                        if (trappedEntity instanceof Player) {
+                            signal = 15;
+                        } else {
+                            signal = 10;
+                        }
+                    } else {
+                        signal = 5;
+                    }
+
+                    bearTrap.setRedstoneSignal(signal);
+                    level.updateNeighborsAt(pos, level.getBlockState(pos).getBlock());
                 }
 
 
@@ -135,6 +152,7 @@ public class BearTrapUtils {
 
         if (be instanceof BearTrapBE bearTrap) {
             bearTrap.setAndTrigger("bear_trap_open");
+            bearTrap.setRedstoneSignal(0);
             level.setBlock(pos, trapState.setValue(TRAP_SET, true), 3);
 
             level.playSound(null, pos, ModSounds.BEAR_TRAP_SET.get(), SoundSource.BLOCKS, 1.0F, 1.0F);

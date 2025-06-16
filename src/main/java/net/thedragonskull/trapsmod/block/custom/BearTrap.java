@@ -252,6 +252,20 @@ public class BearTrap extends BaseEntityBlock {
     }
 
     @Override
+    public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof BearTrapBE bearTrap) {
+            return bearTrap.getRedstoneSignal();
+        }
+        return 0;
+    }
+
+    @Override
+    public boolean isSignalSource(BlockState state) {
+        return true;
+    }
+
+    @Override
     public BlockState updateShape(BlockState pState, Direction pDirection, BlockState pNeighborState, LevelAccessor pLevel, BlockPos pPos, BlockPos pNeighborPos) {
 
         if (!pState.canSurvive(pLevel, pPos)) {
