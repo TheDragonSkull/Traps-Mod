@@ -17,8 +17,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -35,16 +35,13 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.thedragonskull.trapsmod.block.entity.BearTrapBE;
-import net.thedragonskull.trapsmod.sound.ModSounds;
+import net.thedragonskull.trapsmod.util.BearTrapUtils;
 import net.thedragonskull.trapsmod.util.ModTags;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 import static net.thedragonskull.trapsmod.util.BearTrapUtils.*;
 
@@ -94,6 +91,13 @@ public class BearTrap extends BaseEntityBlock {
         BlockEntity be = pLevel.getBlockEntity(pPos);
 
         if (be instanceof BearTrapBE trapBE) {
+            ItemStack trapItem = trapBE.getTrapItem();
+
+            if (!trapItem.isEmpty()) {
+                ItemEntity drop = new ItemEntity(pLevel, pPos.getX() + 0.5, pPos.getY() + 0.5, pPos.getZ() + 0.5, trapItem);
+                pLevel.addFreshEntity(drop);
+            }
+
             trapBE.ignoreEntity(trapBE.trappedEntityId, 40);
             trapBE.releaseTrapped();
         }
@@ -103,10 +107,22 @@ public class BearTrap extends BaseEntityBlock {
 
     @Override
     public InteractionResult use(BlockState pState, Level level, BlockPos pos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
-        if (level.isClientSide) return InteractionResult.SUCCESS;
+
+        if (level.isClientSide) {
+            if (pPlayer.getItemInHand(pHand).getItem() instanceof BlockItem) {
+                if (pPlayer.isShiftKeyDown()) {
+                    return InteractionResult.PASS;
+                } else {
+                    return InteractionResult.CONSUME;
+                }
+            }
+            return InteractionResult.SUCCESS;
+        }
 
         BlockEntity be = level.getBlockEntity(pos);
         if (!(be instanceof BearTrapBE trapBE)) return InteractionResult.PASS;
+
+        if (!pPlayer.isShiftKeyDown() && pState.getValue(TRAP_SET)) BearTrapUtils.interact(pPlayer, level, pos, pHand, trapBE.getItemHandler());
 
         boolean isOwner = trapBE.getOwner() != null && trapBE.getOwner().equals(pPlayer.getUUID());
 
@@ -135,23 +151,28 @@ public class BearTrap extends BaseEntityBlock {
 
             if (!pState.getValue(TRAP_SET)) return InteractionResult.FAIL;
 
+            ItemStack tool = pPlayer.getItemInHand(pHand);
+
             if (!isBuried) {
                 // Bury if correct block below
                 if (!level.getBlockState(pos.below()).is(ModTags.Blocks.BURYABLE_ON)) return InteractionResult.FAIL;
 
                 level.setBlock(pos, pState.setValue(BearTrap.BURIED, true), 3);
-                level.playSound(null, pos, SoundEvents.BRUSH_SAND, SoundSource.BLOCKS, 1.0F, 1.0F); //todo: durability
-                return InteractionResult.SUCCESS;
+                level.playSound(null, pos, SoundEvents.BRUSH_SAND, SoundSource.BLOCKS, 1.0F, 1.0F);
+
+                tool.hurtAndBreak(1, pPlayer, (p) -> p.broadcastBreakEvent(pHand));
             } else {
                 // Unbury
                 level.setBlock(pos, pState.setValue(BearTrap.BURIED, false), 3);
-                level.playSound(null, pos, SoundEvents.GRAVEL_BREAK, SoundSource.BLOCKS, 1.0F, 1.0F); //todo: durability
-                return InteractionResult.SUCCESS;
+                level.playSound(null, pos, SoundEvents.BRUSH_GRAVEL, SoundSource.BLOCKS, 1.0F, 1.0F);
+
+                tool.hurtAndBreak(1, pPlayer, (p) -> p.broadcastBreakEvent(pHand));
             }
 
+            return InteractionResult.SUCCESS;
         }
 
-        return InteractionResult.PASS;
+        return InteractionResult.CONSUME;
     }
 
     @Override

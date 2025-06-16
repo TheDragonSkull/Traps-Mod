@@ -4,11 +4,23 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.items.ItemStackHandler;
 import net.thedragonskull.trapsmod.block.custom.BearTrap;
 import net.thedragonskull.trapsmod.block.entity.BearTrapBE;
 import net.thedragonskull.trapsmod.sound.ModSounds;
@@ -41,6 +53,25 @@ public class BearTrapUtils {
         if (be instanceof BearTrapBE bearTrap) {
             bearTrap.setAndTrigger("bear_trap_snap");
             level.setBlock(pos, trapState.setValue(BURIED, false).setValue(TRAP_SET, false), 3);
+            //todo: itemStackHandler -> empty
+            ItemStack trapItem = bearTrap.getTrapItem();
+
+            if (!trapItem.isEmpty()) {
+                if (trapItem.is(Blocks.TNT.asItem())) {
+                    Vec3 explosionPos = Vec3.atCenterOf(pos);
+                    level.explode(
+                            null, // sin entidad responsable
+                            level.damageSources().explosion(null), // fuente de daño
+                            null, // sin ExplosionDamageCalculator personalizado
+                            explosionPos,
+                            5.0F, // potencia
+                            false, // fuego
+                            Level.ExplosionInteraction.BLOCK // afecta bloques
+                    );
+                }
+
+                bearTrap.getItemHandler().extractItem(0, 1, false);
+            }
 
             level.playSound(null, pos, ModSounds.BEAR_TRAP_SNAP.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
         }
@@ -60,17 +91,43 @@ public class BearTrapUtils {
 
     }
 
-    public static void trapBury(Level level, BlockPos pos) {
-        BlockEntity be = level.getBlockEntity(pos);
-        BlockState trapState = level.getBlockState(pos);
+    public static void interact(Player player, Level level, BlockPos pos, InteractionHand hand, ItemStackHandler itemHandler) { //todo: sonidos
+        ItemStack heldItem = player.getItemInHand(hand);
+        int selectedSlot = player.getInventory().selected;
 
-        if (be instanceof BearTrapBE bearTrap) {
-            bearTrap.setAndTrigger("bear_trap_bury");
-            level.setBlock(pos, trapState.setValue(BURIED, true), 3);
+        if (level == null)
+            return;
 
-            level.playSound(null, pos, SoundEvents.BRUSH_GENERIC, SoundSource.BLOCKS, 1.0F, 1.0F);
+        // Put item
+        if (itemHandler.getStackInSlot(0).isEmpty() && isValidTrapItem(heldItem)) {
+            ItemStack stack = heldItem.copy();
+            stack.setCount(1);
+            itemHandler.setStackInSlot(0, stack);
+            heldItem.shrink(1);
+            level.playSound(null, pos,
+                    SoundEvents.STONE_BUTTON_CLICK_ON, SoundSource.BLOCKS);
+
+            // Retrieve item
+        } else if (!itemHandler.getStackInSlot(0).isEmpty() && heldItem.isEmpty()) {
+            player.getInventory().setItem(selectedSlot, itemHandler.getStackInSlot(0));
+            itemHandler.setStackInSlot(0, ItemStack.EMPTY);
+            level.playSound(null, pos,
+                    SoundEvents.STONE_BUTTON_CLICK_OFF, SoundSource.BLOCKS);
+
+            // Replace item
+        } else if (!itemHandler.getStackInSlot(0).isEmpty() && isValidTrapItem(heldItem)) {
+            player.getInventory().setItem(selectedSlot, itemHandler.getStackInSlot(0));
+            ItemStack stack = heldItem.copy();
+            stack.setCount(1);
+            itemHandler.setStackInSlot(0, stack);
+            heldItem.shrink(1);
+            level.playSound(null, pos,
+                    SoundEvents.STONE_BUTTON_CLICK_ON, SoundSource.BLOCKS);
         }
     }
 
+    public static boolean isValidTrapItem(ItemStack stack) {
+        return stack.is(ModTags.Items.VALID_TRAP_ITEMS);
+    }
 
 }

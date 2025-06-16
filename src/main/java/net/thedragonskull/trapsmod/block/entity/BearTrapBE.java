@@ -9,9 +9,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.items.ItemStackHandler;
 import net.thedragonskull.trapsmod.block.custom.BearTrap;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
@@ -27,6 +29,16 @@ import java.util.UUID;
 
 public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
     private AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+
+    private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
+        @Override
+        protected void onContentsChanged(int slot) {
+            setChanged();
+            if (level != null && !level.isClientSide()) {
+                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
+            }
+        }
+    };
 
     public static final RawAnimation SNAP = RawAnimation.begin().thenPlayAndHold("animation.bear_trap.snap");
     public static final RawAnimation OPEN = RawAnimation.begin().thenPlayAndHold("animation.bear_trap.open");
@@ -145,6 +157,14 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
         this.ignoreTicks = ticks;
     }
 
+    public ItemStackHandler getItemHandler() {
+        return itemHandler;
+    }
+
+    public ItemStack getTrapItem() {
+        return itemHandler.getStackInSlot(0);
+    }
+
     @Override
     public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
@@ -156,6 +176,8 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
         if (owner != null) tag.putUUID("owner", owner);
 
         tag.putString("ownerName", ownerName);
+
+        tag.put("trapItem", itemHandler.serializeNBT());
     }
 
     @Override
@@ -169,6 +191,8 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
         if (tag.hasUUID("owner")) owner = tag.getUUID("owner");
 
         if (tag.contains("ownerName")) ownerName = tag.getString("ownerName");
+
+        itemHandler.deserializeNBT(tag.getCompound("trapItem"));
     }
 
     @Nullable

@@ -3,6 +3,7 @@ package net.thedragonskull.trapsmod.util;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.thedragonskull.trapsmod.TrapsMod;
 
@@ -18,6 +19,12 @@ public class ModTags {
 
         public static final TagKey<Block> BURYABLE_ON = TagKey.create(Registries.BLOCK,
                 ResourceLocation.fromNamespaceAndPath(TrapsMod.MOD_ID, "buryable_on"));
+    }
+
+    public static class Items {
+
+        public static final TagKey<Item> VALID_TRAP_ITEMS = TagKey.create(
+                Registries.ITEM, ResourceLocation.fromNamespaceAndPath(TrapsMod.MOD_ID, "valid_trap_items"));
     }
 
 }
