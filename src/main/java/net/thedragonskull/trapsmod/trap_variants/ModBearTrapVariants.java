@@ -12,6 +12,7 @@ import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.entity.projectile.ThrownPotion;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -19,7 +20,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.thedragonskull.trapsmod.block.entity.BearTrapBE;
+import net.thedragonskull.trapsmod.util.ModTags;
 
 public class ModBearTrapVariants {
 
@@ -142,8 +145,14 @@ public class ModBearTrapVariants {
         });
 
         // FOOD
+        for (Item item : ForgeRegistries.ITEMS.getValues()) {
+            if (item.builtInRegistryHolder().is(ModTags.Items.TEMPT_ITEMS)) {
+                BearTrapVariantRegistry.register(item, (level, pos, entity) -> {});
+            }
+        }
 
-        
+        // ENDER PEARL
+
         // POTIONS
         BearTrapVariantRegistry.register(Items.SPLASH_POTION, (level, pos, entity) -> throwPotion(level, pos));
         BearTrapVariantRegistry.register(Items.LINGERING_POTION, (level, pos, entity) -> throwPotion(level, pos));

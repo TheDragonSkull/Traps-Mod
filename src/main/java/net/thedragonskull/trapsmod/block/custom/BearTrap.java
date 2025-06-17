@@ -39,6 +39,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.thedragonskull.trapsmod.block.entity.BearTrapBE;
+import net.thedragonskull.trapsmod.trap_variants.BearTrapExclusionRegistry;
 import net.thedragonskull.trapsmod.util.BearTrapUtils;
 import net.thedragonskull.trapsmod.util.ModTags;
 import org.jetbrains.annotations.Nullable;
@@ -188,28 +189,14 @@ public class BearTrap extends BaseEntityBlock {
 
         if (!level.isClientSide && pState.getValue(BearTrap.TRAP_SET)) {
 
-            // 🧍 Si es entidad viva
-            if (pEntity instanceof LivingEntity living) { // todo: lista o algo de exclusión de mobs (wither, ender dragon, ghast, etc)
+            if (pEntity instanceof LivingEntity living) {
                 if (isCentered) {
                     if (bearTrap.trappedEntityId == null &&
                             (bearTrap.ignoredEntity == null || !bearTrap.ignoredEntity.equals(living.getUUID()))) {
 
                         trapSnap(level, pPos, living);
-
-                        if (living instanceof Mob mob) {
-                            mob.setPersistenceRequired();
-                        }
-
-                        if (living instanceof Player player) {
-                            ItemStack leggings = player.getItemBySlot(EquipmentSlot.LEGS);
-                            float damage = leggings.isEmpty() ? 6.0f : 4.0f;
-                            living.hurt(level.damageSources().cactus(), damage);
-                        } else {
-                            living.hurt(level.damageSources().cactus(), 6);
-                        }
                     }
                 } else {
-                    // Tick de daño si ya está dentro
                     if (living.invulnerableTime <= 0) {
                         living.hurt(level.damageSources().cactus(), 1);
                     }

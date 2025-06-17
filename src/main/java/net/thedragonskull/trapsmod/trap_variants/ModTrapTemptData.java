@@ -30,7 +30,7 @@ public class ModTrapTemptData {
         TrapTemptRegistry.register(EntityType.FROG, Ingredient.of(Items.SLIME_BALL));
         TrapTemptRegistry.register(EntityType.TADPOLE, Ingredient.of(Items.SLIME_BALL));
         TrapTemptRegistry.register(EntityType.AXOLOTL, Ingredient.of(Items.TROPICAL_FISH_BUCKET));
-        TrapTemptRegistry.register(EntityType.AXOLOTL, Ingredient.of(ItemTags.FLOWERS));
+        TrapTemptRegistry.register(EntityType.BEE, Ingredient.of(ItemTags.FLOWERS));
         TrapTemptRegistry.register(EntityType.CAMEL, Ingredient.of(Items.CACTUS));
         TrapTemptRegistry.register(EntityType.LLAMA, Ingredient.of(Items.WHEAT, Blocks.HAY_BLOCK.asItem()));
         TrapTemptRegistry.register(EntityType.PIGLIN, Ingredient.of(Items.GOLD_INGOT));

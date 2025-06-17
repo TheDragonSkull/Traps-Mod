@@ -8,6 +8,8 @@
     "minecraft:lightning_rod",
 
     "minecraft:splash_potion",
-    "minecraft:lingering_potion"
+    "minecraft:lingering_potion",
+
+    "#trapsmod:tempt_items"
   ]
 }

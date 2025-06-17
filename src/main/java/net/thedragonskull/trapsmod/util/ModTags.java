@@ -25,6 +25,10 @@ public class ModTags {
 
         public static final TagKey<Item> VALID_TRAP_ITEMS = TagKey.create(
                 Registries.ITEM, ResourceLocation.fromNamespaceAndPath(TrapsMod.MOD_ID, "valid_trap_items"));
+
+        public static final TagKey<Item> TEMPT_ITEMS = TagKey.create(
+                Registries.ITEM, ResourceLocation.fromNamespaceAndPath(TrapsMod.MOD_ID, "tempt_items"));
+
     }
 
 }

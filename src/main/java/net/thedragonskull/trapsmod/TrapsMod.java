@@ -19,7 +19,9 @@ import net.thedragonskull.trapsmod.block.entity.renderer.PunjiSticksPlankRendere
 import net.thedragonskull.trapsmod.item.ModItems;
 import net.thedragonskull.trapsmod.network.PacketHandler;
 import net.thedragonskull.trapsmod.sound.ModSounds;
+import net.thedragonskull.trapsmod.trap_variants.BearTrapExclusionRegistry;
 import net.thedragonskull.trapsmod.trap_variants.ModBearTrapVariants;
+import net.thedragonskull.trapsmod.trap_variants.ModTrapExclusions;
 import net.thedragonskull.trapsmod.trap_variants.ModTrapTemptData;
 import org.slf4j.Logger;
 
@@ -49,6 +51,7 @@ public class TrapsMod
             event.enqueueWork(PacketHandler::register);
             event.enqueueWork(ModBearTrapVariants::registerVariant);
             event.enqueueWork(ModTrapTemptData::registerDefaults);
+            event.enqueueWork(ModTrapExclusions::registerDefaults);
         });
     }
 

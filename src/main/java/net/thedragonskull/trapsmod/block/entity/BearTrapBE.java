@@ -16,6 +16,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.items.ItemStackHandler;
 import net.thedragonskull.trapsmod.block.custom.BearTrap;
+import net.thedragonskull.trapsmod.util.BearTrapUtils;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
@@ -68,7 +69,15 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
         if (ignoreTicks > 0) ignoreTicks--;
         if (ignoreTicks <= 0) ignoredEntity = null;
 
-        if (trappedEntityId == null) return;
+        if (trappedEntityId == null) {
+            if (this.getBlockState().getValue(BearTrap.TRAP_SET)) {
+                ItemStack bait = getTrapItem();
+                if (!bait.isEmpty()) {
+                    BearTrapUtils.attractNearbyMobs(bait, level, worldPosition);
+                }
+            }
+            return;
+        }
 
         Entity entity = ((ServerLevel) level).getEntity(trappedEntityId);
 

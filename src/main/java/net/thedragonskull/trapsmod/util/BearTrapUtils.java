@@ -7,20 +7,22 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -28,7 +30,9 @@ import net.minecraftforge.items.ItemStackHandler;
 import net.thedragonskull.trapsmod.block.custom.BearTrap;
 import net.thedragonskull.trapsmod.block.entity.BearTrapBE;
 import net.thedragonskull.trapsmod.sound.ModSounds;
+import net.thedragonskull.trapsmod.trap_variants.BearTrapExclusionRegistry;
 import net.thedragonskull.trapsmod.trap_variants.BearTrapVariantRegistry;
+import net.thedragonskull.trapsmod.trap_variants.TrapTemptRegistry;
 
 import javax.annotation.Nullable;
 import java.util.Random;
@@ -61,7 +65,23 @@ public class BearTrapUtils {
         if (be instanceof BearTrapBE bearTrap) {
 
             if (trappedEntity != null) {
-                bearTrap.trapEntity(trappedEntity);
+                if (!BearTrapExclusionRegistry.isExcluded(trappedEntity)) {
+                    bearTrap.trapEntity(trappedEntity);
+                } else {
+                    trappedEntity.hurt(level.damageSources().cactus(), 6.0F);
+                }
+
+                if (trappedEntity instanceof Mob mob && !BearTrapExclusionRegistry.isExcluded(trappedEntity)) {
+                    mob.setPersistenceRequired();
+                }
+
+                if (trappedEntity instanceof Player player) {
+                    ItemStack leggings = player.getItemBySlot(EquipmentSlot.LEGS);
+                    float damage = leggings.isEmpty() ? 6.0f : 4.0f;
+                    trappedEntity.hurt(level.damageSources().cactus(), damage);
+                } else {
+                    trappedEntity.hurt(level.damageSources().cactus(), 6);
+                }
             }
 
             bearTrap.setAndTrigger("bear_trap_snap");
@@ -136,5 +156,32 @@ public class BearTrapUtils {
     public static boolean isValidTrapItem(ItemStack stack) {
         return stack.is(ModTags.Items.VALID_TRAP_ITEMS);
     }
+
+    public static void attractNearbyMobs(ItemStack bait, Level level, BlockPos pos) {
+        AABB area = new AABB(pos).inflate(8, 2, 8);
+
+        for (PathfinderMob mob : level.getEntitiesOfClass(PathfinderMob.class, area)) {
+            Ingredient preferred = TrapTemptRegistry.getTemptIngredientFor(mob.getType());
+
+            if (preferred != null && preferred.test(bait)) {
+                Vec3 trapCenter = Vec3.atCenterOf(pos);
+                double distSq = mob.position().distanceToSqr(trapCenter);
+
+                if (distSq < 2) {
+                    BearTrapUtils.trapSnap(level, pos, mob);
+                    return;
+                }
+
+                mob.getNavigation().moveTo(
+                        trapCenter.x,
+                        trapCenter.y + 0.1,
+                        trapCenter.z,
+                        1.0D
+                );
+            }
+        }
+    }
+
+
 
 }
