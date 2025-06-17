@@ -7,10 +7,13 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.FireworkRocketEntity;
+import net.minecraft.world.entity.projectile.ThrownEnderpearl;
 import net.minecraft.world.entity.projectile.ThrownPotion;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -20,9 +23,12 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.event.entity.EntityTeleportEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.thedragonskull.trapsmod.block.entity.BearTrapBE;
 import net.thedragonskull.trapsmod.util.ModTags;
+
+import java.util.UUID;
 
 public class ModBearTrapVariants {
 
@@ -152,6 +158,35 @@ public class ModBearTrapVariants {
         }
 
         // ENDER PEARL
+        BearTrapVariantRegistry.register(Items.ENDER_PEARL, ((level, pos, entity) -> {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (!(be instanceof BearTrapBE bearTrap)) return;
+
+            UUID ownerId = bearTrap.getOwner();
+            if (!(level instanceof ServerLevel serverLevel) || ownerId == null) return;
+
+            Entity entityOwner = serverLevel.getEntity(ownerId);
+            if (!(entityOwner instanceof ServerPlayer player)) return;
+
+            BlockPos[] offsets = {
+                    pos.north(), pos.south(), pos.east(), pos.west(),
+                    pos.north().east(), pos.north().west(), pos.south().east(), pos.south().west()
+            };
+
+            for (BlockPos target : offsets) {
+                if (level.isEmptyBlock(target) && level.isEmptyBlock(target.above())) {
+                    Vec3 spawnPos = Vec3.atCenterOf(target.above());
+                    ThrownEnderpearl pearl = new ThrownEnderpearl(level, player);
+
+                    pearl.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
+                    pearl.setDeltaMovement(Vec3.ZERO);
+
+                    level.playSound(null, pos, SoundEvents.ENDERMAN_TELEPORT, SoundSource.BLOCKS, 1.0F, 1.0F);
+                    level.addFreshEntity(pearl);
+                    break;
+                }
+            }
+        }));
 
         // POTIONS
         BearTrapVariantRegistry.register(Items.SPLASH_POTION, (level, pos, entity) -> throwPotion(level, pos));
