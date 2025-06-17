@@ -189,7 +189,7 @@ public class BearTrap extends BaseEntityBlock {
         if (!level.isClientSide && pState.getValue(BearTrap.TRAP_SET)) {
 
             // 🧍 Si es entidad viva
-            if (pEntity instanceof LivingEntity living) {
+            if (pEntity instanceof LivingEntity living) { // todo: lista o algo de exclusión de mobs (wither, ender dragon, ghast, etc)
                 if (isCentered) {
                     if (bearTrap.trappedEntityId == null &&
                             (bearTrap.ignoredEntity == null || !bearTrap.ignoredEntity.equals(living.getUUID()))) {

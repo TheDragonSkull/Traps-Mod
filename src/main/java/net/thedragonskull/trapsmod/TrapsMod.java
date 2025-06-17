@@ -20,6 +20,7 @@ import net.thedragonskull.trapsmod.item.ModItems;
 import net.thedragonskull.trapsmod.network.PacketHandler;
 import net.thedragonskull.trapsmod.sound.ModSounds;
 import net.thedragonskull.trapsmod.trap_variants.ModBearTrapVariants;
+import net.thedragonskull.trapsmod.trap_variants.ModTrapTemptData;
 import org.slf4j.Logger;
 
 @Mod(TrapsMod.MOD_ID)
@@ -47,6 +48,7 @@ public class TrapsMod
         event.enqueueWork(() -> {
             event.enqueueWork(PacketHandler::register);
             event.enqueueWork(ModBearTrapVariants::registerVariant);
+            event.enqueueWork(ModTrapTemptData::registerDefaults);
         });
     }
 

@@ -5,6 +5,9 @@
     "minecraft:firework_rocket",
     "minecraft:fire_charge",
     "minecraft:redstone_block",
-    "minecraft:lightning_rod"
+    "minecraft:lightning_rod",
+
+    "minecraft:splash_potion",
+    "minecraft:lingering_potion"
   ]
 }

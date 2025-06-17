@@ -11,6 +11,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.FireworkRocketEntity;
+import net.minecraft.world.entity.projectile.ThrownPotion;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -140,6 +141,34 @@ public class ModBearTrapVariants {
 
         });
 
+        // FOOD
+
+        
+        // POTIONS
+        BearTrapVariantRegistry.register(Items.SPLASH_POTION, (level, pos, entity) -> throwPotion(level, pos));
+        BearTrapVariantRegistry.register(Items.LINGERING_POTION, (level, pos, entity) -> throwPotion(level, pos));
     }
+
+    private static void throwPotion(Level level, BlockPos pos) {
+        if (!(level instanceof ServerLevel serverLevel)) return;
+
+        BlockEntity be = level.getBlockEntity(pos);
+        if (!(be instanceof BearTrapBE bearTrap)) return;
+
+        ItemStack potionStack = bearTrap.getTrapItem();
+        if (potionStack.isEmpty()) return;
+
+        Vec3 center = Vec3.atCenterOf(pos);
+
+        ThrownPotion potionEntity = new ThrownPotion(serverLevel, center.x, center.y + 0.5, center.z);
+        potionEntity.setItem(potionStack.copy());
+
+        potionEntity.setDeltaMovement(0, 0.5, 0);
+
+        serverLevel.addFreshEntity(potionEntity);
+    }
+
+
+
 
 }
