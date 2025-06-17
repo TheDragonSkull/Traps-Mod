@@ -6,6 +6,7 @@
   "block.trapsmod.sharpened_bamboo": "Sharpened Bamboo",
   "block.trapsmod.creaking_floor": "Nightingale Floor",
   "block.trapsmod.bear_trap": "Bear Trap",
+  "block.trapsmod.fake_floor": "Fake Floor (Sticks)",
 
   "message.trapsmod.cage_trap.no_support": "❌ There is no solid block above.",
   "message.trapsmod.cage_trap.valid_structure": "✅ Cage trap detected!",

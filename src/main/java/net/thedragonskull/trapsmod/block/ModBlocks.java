@@ -46,7 +46,12 @@ public class ModBlocks {
 
     public static final RegistryObject<Block> BEAR_TRAP = registerBlock("bear_trap",
             () -> new BearTrap(BlockBehaviour.Properties.of().mapColor(MapColor.TERRACOTTA_CYAN)
-                    .requiresCorrectToolForDrops().strength(5.0F, 1200.0F).sound(SoundType.ANVIL).noOcclusion()));//todo destroy time alto
+                    .requiresCorrectToolForDrops().strength(30.0F, 1200.0F).sound(SoundType.ANVIL).noOcclusion()));
+
+    public static final RegistryObject<Block> FAKE_FLOOR = registerBlock("fake_floor",
+            () -> new FakeFloor(BlockBehaviour.Properties.of().mapColor(MapColor.WOOD)
+                    .strength(1.0F).instabreak().ignitedByLava().noOcclusion()
+                    .pushReaction(PushReaction.DESTROY).isRedstoneConductor(ModBlocks::never)));
 
 
     private static boolean never(BlockState p_50806_, BlockGetter p_50807_, BlockPos p_50808_) {
