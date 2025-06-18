@@ -69,6 +69,16 @@ public class BearTrap extends BaseEntityBlock {
         pBuilder.add(FACING, TRAP_SET, BURIED);
     }
 
+    // Cannot break if buried
+    @Override
+    public float getDestroyProgress(BlockState state, Player player, BlockGetter level, BlockPos pos) {
+        if (state.getValue(BURIED)) {
+            return 0.0F;
+        }
+        return super.getDestroyProgress(state, player, level, pos);
+    }
+
+
     @Override
     public void setPlacedBy(Level pLevel, BlockPos pPos, BlockState pState, @Nullable LivingEntity pPlacer, ItemStack pStack) {
         if (!pLevel.isClientSide && pPlacer instanceof Player player) {
