@@ -16,6 +16,7 @@ import net.thedragonskull.trapsmod.block.ModBlocks;
 import net.thedragonskull.trapsmod.block.entity.ModBlockEntities;
 import net.thedragonskull.trapsmod.block.entity.renderer.BearTrapRenderer;
 import net.thedragonskull.trapsmod.block.entity.renderer.PunjiSticksPlankRenderer;
+import net.thedragonskull.trapsmod.item.ModCreativeModeTabs;
 import net.thedragonskull.trapsmod.item.ModItems;
 import net.thedragonskull.trapsmod.network.PacketHandler;
 import net.thedragonskull.trapsmod.sound.ModSounds;
@@ -39,6 +40,7 @@ public class TrapsMod
         ModBlocks.register(modEventBus);
         ModBlockEntities.register(modEventBus);
         ModSounds.register(modEventBus);
+        ModCreativeModeTabs.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);

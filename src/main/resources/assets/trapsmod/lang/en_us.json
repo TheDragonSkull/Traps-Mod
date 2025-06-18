@@ -11,5 +11,7 @@
 
   "message.trapsmod.cage_trap.no_support": "❌ There is no solid block above.",
   "message.trapsmod.cage_trap.valid_structure": "✅ Cage trap detected!",
-  "message.trapsmod.cage_trap.invalid_structure": "❌ Invalid structure."
+  "message.trapsmod.cage_trap.invalid_structure": "❌ Invalid structure.",
+
+  "creativetab.traps_tab": "TheDragon's Traps"
 }
