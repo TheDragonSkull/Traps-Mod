@@ -10,7 +10,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.StairsShape;
-import net.minecraft.world.level.block.state.properties.WallSide;
 import net.thedragonskull.trapsmod.block.ModBlocks;
 
 import javax.annotation.Nullable;
@@ -22,7 +21,7 @@ public class CageTrapUtils {
 
     /**
      * Checks if a valid cage trap structure exists at the given origin position.
-     *
+     * <p>
      * The structure is 3x3 wide and 5 blocks tall, with specific block types expected at each layer:
      * - Layers 0–2: iron bars / fences at the borders, air in the center
      * - Layer 3: stairs at the edges, a fence in the center

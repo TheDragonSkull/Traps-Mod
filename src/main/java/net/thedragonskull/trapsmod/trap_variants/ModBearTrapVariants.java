@@ -181,7 +181,7 @@ public class ModBearTrapVariants {
                     pearl.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
                     pearl.setDeltaMovement(Vec3.ZERO);
 
-                    level.playSound(null, pos, SoundEvents.ENDERMAN_TELEPORT, SoundSource.BLOCKS, 1.0F, 1.0F);
+                    level.playSound(null, pos, SoundEvents.ENDER_PEARL_THROW, SoundSource.BLOCKS, 1.0F, 1.0F);
                     level.addFreshEntity(pearl);
                     break;
                 }
@@ -203,8 +203,9 @@ public class ModBearTrapVariants {
         if (potionStack.isEmpty()) return;
 
         Vec3 center = Vec3.atCenterOf(pos);
+        double yOffset = potionStack.is(Items.LINGERING_POTION) ? -0.5 : 0.5;
 
-        ThrownPotion potionEntity = new ThrownPotion(serverLevel, center.x, center.y + 0.5, center.z);
+        ThrownPotion potionEntity = new ThrownPotion(serverLevel, center.x, center.y + yOffset, center.z);
         potionEntity.setItem(potionStack.copy());
 
         potionEntity.setDeltaMovement(0, 0.5, 0);

@@ -112,7 +112,7 @@ public class BearTrapUtils {
 
     }
 
-    public static void interact(Player player, Level level, BlockPos pos, InteractionHand hand, ItemStackHandler itemHandler) { //todo: sonidos
+    public static void interact(Player player, Level level, BlockPos pos, InteractionHand hand, ItemStackHandler itemHandler) {
         ItemStack heldItem = player.getItemInHand(hand);
         int selectedSlot = player.getInventory().selected;
 
@@ -124,7 +124,11 @@ public class BearTrapUtils {
             ItemStack stack = heldItem.copy();
             stack.setCount(1);
             itemHandler.setStackInSlot(0, stack);
-            heldItem.shrink(1);
+
+            if (!player.getAbilities().instabuild) {
+                heldItem.shrink(1);
+            }
+
             level.playSound(null, pos,
                     SoundEvents.STONE_BUTTON_CLICK_ON, SoundSource.BLOCKS);
 

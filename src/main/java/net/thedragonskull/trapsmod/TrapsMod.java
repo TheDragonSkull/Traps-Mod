@@ -2,6 +2,8 @@ package net.thedragonskull.trapsmod;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.client.renderer.entity.EntityRenderers;
+import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
@@ -24,6 +26,7 @@ import net.thedragonskull.trapsmod.trap_variants.BearTrapExclusionRegistry;
 import net.thedragonskull.trapsmod.trap_variants.ModBearTrapVariants;
 import net.thedragonskull.trapsmod.trap_variants.ModTrapExclusions;
 import net.thedragonskull.trapsmod.trap_variants.ModTrapTemptData;
+import net.thedragonskull.trapsmod.util.CustomFallingBlockRenderer;
 import org.slf4j.Logger;
 
 @Mod(TrapsMod.MOD_ID)
@@ -71,6 +74,8 @@ public class TrapsMod
             event.enqueueWork(() -> {
                 BlockEntityRenderers.register(ModBlockEntities.PUNJI_STICKS_PLANK_BE.get(), PunjiSticksPlankRenderer::new);
                 BlockEntityRenderers.register(ModBlockEntities.BEAR_TRAP_BE.get(), BearTrapRenderer::new);
+
+                EntityRenderers.register(EntityType.FALLING_BLOCK, CustomFallingBlockRenderer::new);
             });
 
         }
