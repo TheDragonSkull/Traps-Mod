@@ -53,6 +53,11 @@ public class ModBlocks {
                     .strength(1.0F).instabreak().ignitedByLava().noOcclusion()
                     .pushReaction(PushReaction.DESTROY).isRedstoneConductor(ModBlocks::never)));
 
+    public static final RegistryObject<Block> B_FAKE_FLOOR = registerBlock("b_fake_floor",
+            () -> new FakeFloor(BlockBehaviour.Properties.of().mapColor(MapColor.PLANT)
+                    .strength(1.0F).instabreak().ignitedByLava().noOcclusion()
+                    .pushReaction(PushReaction.DESTROY).isRedstoneConductor(ModBlocks::never)));
+
 
     private static boolean never(BlockState p_50806_, BlockGetter p_50807_, BlockPos p_50808_) {
         return false;

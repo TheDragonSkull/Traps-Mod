@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "XYX",
+    "XXX"
+  ],
+  "key": {
+    "X":{
+      "item": "minecraft:iron_ingot"
+    },
+    "Y":{
+      "item": "minecraft:heavy_weighted_pressure_plate"
+    }
+  },
+  "result": {
+    "item": "trapsmod:bear_trap",
+    "count": 1
+  },
+  "show_notification": true
+}

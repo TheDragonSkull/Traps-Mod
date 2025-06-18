@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " YY",
+    " XY",
+    "X  "
+  ],
+  "key": {
+    "X":{
+      "item": "minecraft:stick"
+    },
+    "Y":{
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "item": "trapsmod:hammer",
+    "count": 1
+  },
+  "show_notification": true
+}
