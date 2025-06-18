@@ -13,6 +13,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -106,14 +107,26 @@ public class FakeFloor extends HorizontalDirectionalBlock {
     }
 
     @Override
-    public void stepOn(Level pLevel, BlockPos pPos, BlockState pState, Entity pEntity) {
-        super.stepOn(pLevel, pPos, pState, pEntity);
+    public void stepOn(Level level, BlockPos pos, BlockState state, Entity entity) {
+        super.stepOn(level, pos, state, entity);
 
-        if (!pLevel.isClientSide() && pState.getBlock() instanceof FakeFloor) {
-            if (pState.getValue(HALF) == Half.TOP) {
-                pLevel.destroyBlock(pPos, false);
+        if (!level.isClientSide() && state.getValue(HALF) == Half.TOP) {
+            boolean isOnThinBlock = isBlockAboveThin(level, pos);
+            BlockPos abovePos = pos.above();
+            boolean standingOnTop = entity.getY() >= abovePos.getY() || isOnThinBlock;
+
+            if (standingOnTop) {
+                level.playSound(null, pos, SoundEvents.BAMBOO_WOOD_FENCE_GATE_CLOSE, SoundSource.BLOCKS, 1.0f, 1.0f);
+                level.destroyBlock(pos, false);
             }
         }
+    }
+
+    private boolean isBlockAboveThin(Level level, BlockPos pos) {
+        BlockState above = level.getBlockState(pos.above());
+        return above.isAir() ||
+                above.getCollisionShape(level, pos.above()).isEmpty() ||
+                above.canBeReplaced();
     }
 
     @Override
@@ -129,35 +142,6 @@ public class FakeFloor extends HorizontalDirectionalBlock {
                     pLevel.destroyBlock(pPos, false);
                 }
 
-            }
-        }
-    }
-
-    private void breakConnectedFloors(Level level, BlockPos origin, BlockState originState) {
-
-        Half originHalf = originState.getValue(HALF);
-        Queue<BlockPos> toCheck = new LinkedList<>();
-        Set<BlockPos> visited = new HashSet<>();
-
-        toCheck.add(origin);
-
-        while (!toCheck.isEmpty()) {
-            BlockPos current = toCheck.poll();
-
-            if (!visited.add(current)) continue;
-
-            BlockState state = level.getBlockState(current);
-            if (!(state.getBlock() instanceof FakeFloor)) continue;
-            if (state.getValue(HALF) != originHalf) continue;
-
-            level.destroyBlock(current, false);
-            level.playSound(null, current, SoundEvents.BAMBOO_WOOD_FENCE_GATE_CLOSE, SoundSource.BLOCKS, 1.0f, 1.0f);
-
-            for (Direction dir : Direction.Plane.HORIZONTAL) {
-                BlockPos neighbor = current.relative(dir);
-                if (!visited.contains(neighbor)) {
-                    toCheck.add(neighbor);
-                }
             }
         }
     }
