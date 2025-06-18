@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "XXX",
+    "XXX"
+  ],
+  "key": {
+    "X":{
+      "item": "minecraft:bamboo"
+    }
+  },
+  "result": {
+    "item": "trapsmod:b_fake_floor",
+    "count": 1
+  },
+  "show_notification": true
+}

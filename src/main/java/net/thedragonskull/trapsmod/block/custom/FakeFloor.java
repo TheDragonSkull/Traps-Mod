@@ -144,17 +144,15 @@ public class FakeFloor extends HorizontalDirectionalBlock {
         while (!toCheck.isEmpty()) {
             BlockPos current = toCheck.poll();
 
-            if (!visited.add(current)) continue; // ya lo procesamos
+            if (!visited.add(current)) continue;
 
             BlockState state = level.getBlockState(current);
             if (!(state.getBlock() instanceof FakeFloor)) continue;
             if (state.getValue(HALF) != originHalf) continue;
 
-            // Romper el bloque
             level.destroyBlock(current, false);
             level.playSound(null, current, SoundEvents.BAMBOO_WOOD_FENCE_GATE_CLOSE, SoundSource.BLOCKS, 1.0f, 1.0f);
 
-            // Agregar vecinos cardinales (no diagonales, ni verticales)
             for (Direction dir : Direction.Plane.HORIZONTAL) {
                 BlockPos neighbor = current.relative(dir);
                 if (!visited.contains(neighbor)) {
@@ -193,10 +191,5 @@ public class FakeFloor extends HorizontalDirectionalBlock {
     @Override
     public boolean isPathfindable(BlockState pState, BlockGetter pLevel, BlockPos pPos, PathComputationType pType) {
         return true;
-    }
-
-    @Override
-    public boolean canSurvive(BlockState pState, LevelReader pLevel, BlockPos pPos) { //todo: en agua se rompe
-        return super.canSurvive(pState, pLevel, pPos);
     }
 }
