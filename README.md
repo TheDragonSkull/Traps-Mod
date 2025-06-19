@@ -33,3 +33,7 @@ Introducing numerous new ways of defending your base or simply trapping mobs or 
 **Forge**
 
 - [Minecraft Forge](https://files.minecraftforge.net/net/minecraftforge/forge/)
+
+**GeckoLib**
+
+- [GeckoLib4](https://www.curseforge.com/minecraft/mc-mods/geckolib)
