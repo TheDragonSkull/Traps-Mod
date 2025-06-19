@@ -27,6 +27,14 @@ public class ModBlockEntities {
                     BlockEntityType.Builder.of(BearTrapBE::new,
                             ModBlocks.BEAR_TRAP.get()).build(null));
 
+    public static final RegistryObject<BlockEntityType<FakeFloorBlockEntity>> FAKE_FLOOR_BE =
+            BLOCK_ENTITIES.register("fake_floor_be", () ->
+                    BlockEntityType.Builder.of(
+                            FakeFloorBlockEntity::new,
+                            ModBlocks.FAKE_FLOOR.get(),
+                            ModBlocks.B_FAKE_FLOOR.get()
+                    ).build(null));
+
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);
     }

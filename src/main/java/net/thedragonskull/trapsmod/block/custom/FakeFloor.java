@@ -7,24 +7,29 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.HorizontalDirectionalBlock;
-import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.thedragonskull.trapsmod.block.entity.CageTrapTickerBlockEntity;
+import net.thedragonskull.trapsmod.block.entity.FakeFloorBlockEntity;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
@@ -32,7 +37,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
-public class FakeFloor extends HorizontalDirectionalBlock {
+public class FakeFloor extends HorizontalDirectionalBlock implements EntityBlock {
     public static final EnumProperty<Half> HALF = BlockStateProperties.HALF;
     protected static final VoxelShape BOTTOM_AABB = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 2.0D, 16.0D);
     protected static final VoxelShape TOP_AABB = Block.box(0.0D, 14.0D, 0.0D, 16.0D, 16.0D, 16.0D);
@@ -110,14 +115,16 @@ public class FakeFloor extends HorizontalDirectionalBlock {
     public void stepOn(Level level, BlockPos pos, BlockState state, Entity entity) {
         super.stepOn(level, pos, state, entity);
 
+        if (entity instanceof ItemEntity) return;
+
         if (!level.isClientSide() && state.getValue(HALF) == Half.TOP) {
             boolean isOnThinBlock = isBlockAboveThin(level, pos);
             BlockPos abovePos = pos.above();
             boolean standingOnTop = entity.getY() >= abovePos.getY() || isOnThinBlock;
+            BlockEntity be = level.getBlockEntity(pos);
 
-            if (standingOnTop) {
-                level.playSound(null, pos, SoundEvents.BAMBOO_WOOD_FENCE_GATE_CLOSE, SoundSource.BLOCKS, 1.0f, 1.0f);
-                level.destroyBlock(pos, false);
+            if (standingOnTop && be instanceof FakeFloorBlockEntity fakeFloor) {
+                fakeFloor.setEntityPresent(true);
             }
         }
     }
@@ -133,13 +140,19 @@ public class FakeFloor extends HorizontalDirectionalBlock {
     public void entityInside(BlockState pState, Level pLevel, BlockPos pPos, Entity pEntity) {
         super.entityInside(pState, pLevel, pPos, pEntity);
 
+        if (pEntity instanceof ItemEntity) return;
+
         double blockTopY = pPos.getY() + 0.25;
         double entityFeetY = pEntity.getBoundingBox().minY;
+        BlockEntity be = pLevel.getBlockEntity(pPos);
 
         if (!pLevel.isClientSide() && pState.getBlock() instanceof FakeFloor) {
+
             if (pState.getValue(HALF) == Half.BOTTOM) {
                 if (entityFeetY <= blockTopY && entityFeetY >= pPos.getY()) {
-                    pLevel.destroyBlock(pPos, false);
+                    if (be instanceof FakeFloorBlockEntity fakeFloor) {
+                        fakeFloor.setEntityPresent(true);
+                    }
                 }
 
             }
@@ -172,8 +185,24 @@ public class FakeFloor extends HorizontalDirectionalBlock {
         return TOP_AABB;
     }
 
+    @Nullable
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level pLevel, BlockState pState, BlockEntityType<T> pBlockEntityType) {
+        return pLevel.isClientSide() ? null : ((pLevel1, pPos, pState1, pBlockEntity) -> ((FakeFloorBlockEntity)pBlockEntity).tick());
+    }
+
     @Override
     public boolean isPathfindable(BlockState pState, BlockGetter pLevel, BlockPos pPos, PathComputationType pType) {
         return true;
+    }
+
+    @Override
+    public @Nullable BlockPathTypes getBlockPathType(BlockState state, BlockGetter level, BlockPos pos, @Nullable Mob mob) {
+        return BlockPathTypes.WALKABLE;
+    }
+
+    @Override
+    public @Nullable BlockEntity newBlockEntity(BlockPos pPos, BlockState pState) {
+        return new FakeFloorBlockEntity(pPos, pState);
     }
 }
