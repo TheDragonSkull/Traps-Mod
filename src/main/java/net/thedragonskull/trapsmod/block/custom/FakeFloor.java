@@ -198,7 +198,7 @@ public class FakeFloor extends HorizontalDirectionalBlock implements EntityBlock
 
     @Override
     public @Nullable BlockPathTypes getBlockPathType(BlockState state, BlockGetter level, BlockPos pos, @Nullable Mob mob) {
-        return BlockPathTypes.WALKABLE;
+        return BlockPathTypes.TRAPDOOR;
     }
 
     @Override
