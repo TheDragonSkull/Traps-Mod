@@ -1,5 +1,6 @@
 package net.thedragonskull.trapsmod.event;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -26,17 +27,17 @@ public class CommonEvents {
         if (!(be instanceof BearTrapBE trap)) return;
         if (!trap.isTrappingEntity()) return;
 
+        if (!(event.getPlayer() instanceof ServerPlayer player)) return;
+        if (!player.getUUID().equals(trap.trappedEntityId)) return;
+
         event.setCanceled(true);
 
-        if (level instanceof ServerLevel && event.getPlayer() instanceof ServerPlayer player) {
-            player.displayClientMessage(
-                    Component.literal("§cEvery attempt to move only intensifies the pain. You can only break the trap."),
-                    true
-            );
+        player.displayClientMessage(
+                Component.literal("Every attempt to move only intensifies the pain. You can only break the trap.")
+                        .withStyle(ChatFormatting.DARK_RED), true
+        );
 
-            // Aplica medio corazón de daño
-            player.hurt(level.damageSources().generic(), 1.0F);
-        }
+        player.hurt(level.damageSources().generic(), 1.0F);
     }
 
 }
