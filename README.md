@@ -28,6 +28,10 @@ Introducing numerous new ways of defending your base or simply trapping mobs or 
 
  ---
 
+📷 Images:
+
+ ---
+
 ❗ IMPORTANT ❗
 
 This mod is **NOT** compatible with Optifine.
