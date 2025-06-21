@@ -28,6 +28,12 @@ Introducing numerous new ways of defending your base or simply trapping mobs or 
 
  ---
 
+❗ IMPORTANT ❗
+
+This mod is **NOT** compatible with Optifine.
+
+ ---
+
 🖋 Dependencies:
 
 **Forge**
