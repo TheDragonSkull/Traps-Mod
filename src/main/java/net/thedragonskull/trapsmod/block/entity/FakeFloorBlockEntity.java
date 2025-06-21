@@ -24,7 +24,7 @@ public class FakeFloorBlockEntity extends BlockEntity {
         if (entityPresent) {
             presenceTicks++;
 
-            if (presenceTicks >= 6) {
+            if (presenceTicks >= 5) {
                 level.destroyBlock(getBlockPos(), false);
             }
         } else {
