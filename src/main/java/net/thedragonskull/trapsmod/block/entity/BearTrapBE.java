@@ -158,6 +158,10 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
         setChanged();
     }
 
+    public boolean isTrappingEntity() {
+        return this.trappedEntityId != null;
+    }
+
     public void releaseTrapped() {
         if (trappedEntityId != null && level instanceof ServerLevel serverLevel) {
             Entity entity = serverLevel.getEntity(trappedEntityId);
