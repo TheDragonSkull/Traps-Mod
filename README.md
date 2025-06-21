@@ -28,6 +28,20 @@ Introducing numerous new ways of defending your base or simply trapping mobs or 
 
  ---
 
+📷 Images:
+
+
+
+![cage_trap_1](https://github.com/user-attachments/assets/6dddcbb7-996e-4801-b189-354c07b50bda)
+
+ ---
+
+❗ IMPORTANT ❗
+
+This mod is **NOT** compatible with Optifine.
+
+ ---
+
 🖋 Dependencies:
 
 **Forge**
