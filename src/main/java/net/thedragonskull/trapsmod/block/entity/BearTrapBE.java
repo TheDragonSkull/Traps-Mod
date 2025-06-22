@@ -7,10 +7,8 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -128,11 +126,17 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
 
         if (ticksSinceLoad < 20 && (entity == null || entity instanceof ServerPlayer)) return;
 
+        if (!(entity instanceof LivingEntity living) || !living.isAlive()) {
+            releaseTrapped();
+            return;
+        }
+
+        if (living instanceof TamableAnimal tamableAnimal && tamableAnimal.isTame()) {
+            releaseTrapped();
+            return;
+        }
+
         if (!state.getValue(BearTrap.TRAP_SET)) {
-            if (!(entity instanceof LivingEntity living) || !living.isAlive()) {
-                releaseTrapped();
-                return;
-            }
 
             Vec3 velocity = living.getDeltaMovement();
             double yMotion = velocity.y < 0 ? velocity.y : 0.0;

@@ -174,6 +174,8 @@ public class BearTrapUtils {
         AABB area = new AABB(pos).inflate(8, 2, 8);
 
         for (PathfinderMob mob : level.getEntitiesOfClass(PathfinderMob.class, area)) {
+            if (mob instanceof TamableAnimal tamable && tamable.isTame()) continue;
+
             Ingredient preferred = TrapTemptRegistry.getTemptIngredientFor(mob.getType());
 
             if (preferred != null && preferred.test(bait)) {
