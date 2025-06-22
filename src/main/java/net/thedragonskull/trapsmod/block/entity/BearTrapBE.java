@@ -100,7 +100,7 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
     private void tryPassiveSpawn(ServerLevel serverLevel) {
         if (!isTrappingEntity()) {
             ItemStack bait = this.getTrapItem();
-            if (!bait.isEmpty() && level.random.nextInt(10) == 0) {
+            if (!bait.isEmpty() && level.random.nextInt(1000) == 0) {
 
                 List<EntityType<?>> candidates = TrapTemptRegistry.getMobsForItem(bait).stream()
                         .filter(type -> BearTrapUtils.canMobSpawnInBiome(type, level.getBiome(this.getBlockPos())))
