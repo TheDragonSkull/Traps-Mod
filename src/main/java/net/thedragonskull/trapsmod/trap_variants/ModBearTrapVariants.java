@@ -168,6 +168,8 @@ public class ModBearTrapVariants {
             Entity entityOwner = serverLevel.getEntity(ownerId);
             if (!(entityOwner instanceof ServerPlayer player)) return;
 
+            if (entity != null && entity.getUUID().equals(ownerId)) return;
+
             BlockPos[] offsets = {
                     pos.north(), pos.south(), pos.east(), pos.west(),
                     pos.north().east(), pos.north().west(), pos.south().east(), pos.south().west()

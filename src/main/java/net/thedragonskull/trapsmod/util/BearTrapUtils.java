@@ -2,9 +2,11 @@ package net.thedragonskull.trapsmod.util;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.*;
@@ -19,9 +21,11 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -35,6 +39,9 @@ import net.thedragonskull.trapsmod.trap_variants.BearTrapVariantRegistry;
 import net.thedragonskull.trapsmod.trap_variants.TrapTemptRegistry;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import static net.thedragonskull.trapsmod.block.custom.BearTrap.BURIED;
@@ -92,6 +99,8 @@ public class BearTrapUtils {
                 BearTrapVariantRegistry.triggerVariant(trapItem.getItem(), level, pos, trappedEntity);
                 bearTrap.getItemHandler().extractItem(0, 1, false);
             }
+
+            bearTrap.setHasSummonedMob(false);
 
             level.playSound(null, pos, ModSounds.BEAR_TRAP_SNAP.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
         }
@@ -171,7 +180,10 @@ public class BearTrapUtils {
                 Vec3 trapCenter = Vec3.atCenterOf(pos);
                 double distSq = mob.position().distanceToSqr(trapCenter);
 
-                if (distSq < 2) {
+                double size = Math.max(mob.getBbWidth(), mob.getBbHeight());
+                double triggerRadius = size >= 1.5 ? 3.0 : 2.0;
+
+                if (distSq < triggerRadius) {
                     BearTrapUtils.trapSnap(level, pos, mob);
                     return;
                 }
@@ -186,6 +198,31 @@ public class BearTrapUtils {
         }
     }
 
+    public static boolean canMobSpawnInBiome(EntityType<?> type, Holder<Biome> biome) {
+        MobCategory category = type.getCategory();
+        return biome.value()
+                .getMobSettings()
+                .getMobs(category)
+                .unwrap()
+                .stream()
+                .anyMatch(entry -> entry.type == type);
+    }
+
+    @Nullable
+    public static BlockPos findNearbySpawnPos(Level level, BlockPos center, int radius) {
+        for (int i = 0; i < 20; i++) {
+            int dx = Mth.nextInt(level.random, -radius, radius);
+            int dz = Mth.nextInt(level.random, -radius, radius);
+            BlockPos pos = center.offset(dx, 0, dz);
+            BlockPos ground = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, pos);
+            if (level.getBlockState(ground.below()).isSolidRender(level, ground.below()) &&
+                    level.getBlockState(ground).isAir() &&
+                    level.getBlockState(ground.above()).isAir()) {
+                return ground;
+            }
+        }
+        return null;
+    }
 
 
 }

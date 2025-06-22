@@ -8,6 +8,7 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
@@ -16,6 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.items.ItemStackHandler;
 import net.thedragonskull.trapsmod.block.custom.BearTrap;
+import net.thedragonskull.trapsmod.trap_variants.TrapTemptRegistry;
 import net.thedragonskull.trapsmod.util.BearTrapUtils;
 import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib.animatable.GeoBlockEntity;
@@ -27,7 +29,11 @@ import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.UUID;
+
+import static net.thedragonskull.trapsmod.util.BearTrapUtils.canMobSpawnInBiome;
+import static net.thedragonskull.trapsmod.util.BearTrapUtils.findNearbySpawnPos;
 
 public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
     private AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
@@ -57,6 +63,8 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
     public UUID ignoredEntity = null;
     private int ignoreTicks = 0;
 
+    private boolean hasSummonedMob = false;
+
     public BearTrapBE(BlockPos pPos, BlockState pBlockState) {
         super(ModBlockEntities.BEAR_TRAP_BE.get(), pPos, pBlockState);
     }
@@ -69,40 +77,74 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
         if (ignoreTicks > 0) ignoreTicks--;
         if (ignoreTicks <= 0) ignoredEntity = null;
 
-        if (trappedEntityId == null) {
-            if (this.getBlockState().getValue(BearTrap.TRAP_SET)) {
-                ItemStack bait = getTrapItem();
-                if (!bait.isEmpty()) {
-                    BearTrapUtils.attractNearbyMobs(bait, level, worldPosition);
-                }
-            }
+        BlockState state = this.getBlockState();
+
+        if (trappedEntityId != null) {
+            processTrappedEntity(state);
             return;
         }
 
+        if (state.getValue(BearTrap.TRAP_SET)) {
+            ItemStack bait = getTrapItem();
+            if (!bait.isEmpty()) {
+                BearTrapUtils.attractNearbyMobs(bait, level, worldPosition);
+            }
+        }
+
+        if (!hasSummonedMob() && level instanceof ServerLevel serverLevel) {
+            tryPassiveSpawn(serverLevel);
+        }
+
+    }
+
+    private void tryPassiveSpawn(ServerLevel serverLevel) {
+        if (!isTrappingEntity()) {
+            ItemStack bait = this.getTrapItem();
+            if (!bait.isEmpty() && level.random.nextInt(10) == 0) {
+
+                List<EntityType<?>> candidates = TrapTemptRegistry.getMobsForItem(bait).stream()
+                        .filter(type -> BearTrapUtils.canMobSpawnInBiome(type, level.getBiome(this.getBlockPos())))
+                        .toList();
+
+                if (!candidates.isEmpty()) {
+                    EntityType<?> selected = candidates.get(serverLevel.getRandom().nextInt(candidates.size()));
+                    BlockPos spawnPos = BearTrapUtils.findNearbySpawnPos(serverLevel, worldPosition, 7);
+
+                    if (spawnPos != null) {
+                        Entity mob = selected.create(serverLevel);
+                        if (mob != null) {
+                            mob.moveTo(Vec3.atBottomCenterOf(spawnPos));
+                            serverLevel.addFreshEntity(mob);
+                            setHasSummonedMob(true);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void processTrappedEntity(BlockState state) {
         Entity entity = ((ServerLevel) level).getEntity(trappedEntityId);
 
-        // Wait for the player to load
         if (ticksSinceLoad < 20 && (entity == null || entity instanceof ServerPlayer)) return;
 
-        if (!this.getBlockState().getValue(BearTrap.TRAP_SET)) {
-
+        if (!state.getValue(BearTrap.TRAP_SET)) {
             if (!(entity instanceof LivingEntity living) || !living.isAlive()) {
                 releaseTrapped();
                 return;
             }
 
-            // Stop movement and tp
             Vec3 velocity = living.getDeltaMovement();
             double yMotion = velocity.y < 0 ? velocity.y : 0.0;
             living.setDeltaMovement(0.0, yMotion, 0.0);
 
-            double centerX = worldPosition.getX() + 0.5;
-            double centerY = worldPosition.getY() + 0.01;
-            double centerZ = worldPosition.getZ() + 0.5;
-            living.teleportTo(centerX, centerY, centerZ);
-            living.makeStuckInBlock(this.getBlockState(), new Vec3(0.0D, 0.01D, 0.0D));
+            living.teleportTo(
+                    worldPosition.getX() + 0.5,
+                    worldPosition.getY() + 0.01,
+                    worldPosition.getZ() + 0.5
+            );
+            living.makeStuckInBlock(state, new Vec3(0.0D, 0.01D, 0.0D));
             living.hurtMarked = true;
-
         } else {
             releaseTrapped();
         }
@@ -199,6 +241,14 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
         setChanged();
     }
 
+    public boolean hasSummonedMob() {
+        return hasSummonedMob;
+    }
+
+    public void setHasSummonedMob(boolean hasSummonedMob) {
+        this.hasSummonedMob = hasSummonedMob;
+    }
+
     @Override
     public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
@@ -220,6 +270,8 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
         tag.put("trapItem", itemHandler.serializeNBT());
 
         tag.putInt("RedstoneSignal", redstoneSignal);
+
+        tag.putBoolean("HasSummonedMob", hasSummonedMob);
     }
 
     @Override
@@ -243,6 +295,8 @@ public class BearTrapBE extends BlockEntity implements GeoBlockEntity {
         itemHandler.deserializeNBT(tag.getCompound("trapItem"));
 
         redstoneSignal = tag.getInt("RedstoneSignal");
+
+        hasSummonedMob = tag.getBoolean("HasSummonedMob");
     }
 
     @Nullable

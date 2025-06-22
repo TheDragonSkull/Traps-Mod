@@ -1,10 +1,13 @@
 package net.thedragonskull.trapsmod.trap_variants;
 
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class TrapTemptRegistry {
 
@@ -21,5 +24,14 @@ public class TrapTemptRegistry {
     public static boolean hasTemptItem(EntityType<?> type) {
         return temptItems.containsKey(type);
     }
+
+    public static List<EntityType<?>> getMobsForItem(ItemStack stack) {
+        return temptItems.entrySet()
+                .stream()
+                .filter(entry -> entry.getValue().test(stack))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+    }
+
 }
 
