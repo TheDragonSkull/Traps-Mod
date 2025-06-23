@@ -30,7 +30,7 @@ Introducing numerous new ways of defending your base or simply trapping mobs or 
 
 📷 Images:
 
-
+![trapsmod_collage](https://github.com/user-attachments/assets/8ac208c1-1eba-4675-9d08-6676cf34ee22)
 
 ![cage_trap_1](https://github.com/user-attachments/assets/6dddcbb7-996e-4801-b189-354c07b50bda)
 
