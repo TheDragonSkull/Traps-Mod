@@ -1,5 +1,8 @@
 ![traps_mod_banner](https://github.com/user-attachments/assets/537403e6-ae38-4d64-8e11-9b4f11b5c5f4)
 
+[![CurseForge Versions](https://cf.way2muchnoise.eu/versions/1292668.svg)](https://www.curseforge.com/minecraft/mc-mods/thedragons-traps)
+[![CurseForge Downloads](https://cf.way2muchnoise.eu/short_1292668_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/thedragons-traps) 
+
 ---
 
 📖 About:
