@@ -3,6 +3,9 @@
 [![CurseForge Versions](https://cf.way2muchnoise.eu/versions/1292668.svg)](https://www.curseforge.com/minecraft/mc-mods/thedragons-traps)
 [![CurseForge Downloads](https://cf.way2muchnoise.eu/short_1292668_downloads.svg)](https://www.curseforge.com/minecraft/mc-mods/thedragons-traps) 
 
+[![Modrinth Versions](https://img.shields.io/modrinth/game-versions/kSzTVNZa?label=Avaliable%20for&color=82ff80)](https://modrinth.com/mod/thedragons-traps) 
+[![Modrinth Downloads](https://img.shields.io/modrinth/dt/kSzTVNZa?logo=modrinth&color=82ff80)](https://modrinth.com/mod/thedragons-traps)
+
 ---
 
 📖 About:
