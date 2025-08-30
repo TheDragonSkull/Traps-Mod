@@ -35,9 +35,8 @@ public class TrapsMod
     public static final String MOD_ID = "trapsmod";
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    public TrapsMod(FMLJavaModLoadingContext context)
-    {
-        IEventBus modEventBus = context.getModEventBus();
+    public TrapsMod() {
+        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
